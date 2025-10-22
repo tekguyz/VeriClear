@@ -1,15 +1,18 @@
 
+
 import React, { Suspense } from 'react';
 // Fix: Use namespace import for react-router-dom to resolve export issues.
 import * as ReactRouterDOM from 'react-router-dom';
 import Layout from './components/layout/Layout';
-import BatchAnalysisView from './components/batch/BatchAnalysisView';
 import { useAppStore } from './store/appStore';
 import EntryView from './features/entry/EntryView';
+import PricingModal from './components/pricing/PricingModal';
+import PaymentModal from './components/pricing/PaymentModal';
 
 // --- Code Splitting for all views ---
 const DashboardView = React.lazy(() => import('./features/dashboard/DashboardView'));
 const LiveCallView = React.lazy(() => import('./components/live/LiveCallView'));
+const BatchAnalysisView = React.lazy(() => import('./components/batch/BatchAnalysisView'));
 const SettingsView = React.lazy(() => import('./features/settings/SettingsView'));
 const HelpView = React.lazy(() => import('./features/help/HelpView'));
 const TermsView = React.lazy(() => import('./features/legal/TermsView'));
@@ -27,10 +30,14 @@ const LoadingSpinner: React.FC = () => (
 
 const App: React.FC = () => {
   const appMode = useAppStore((state) => state.appMode);
+  const isPricingModalVisible = useAppStore((state) => state.isPricingModalVisible);
+  const isPaymentModalVisible = useAppStore((state) => state.isPaymentModalVisible);
   const { HashRouter, Routes, Route, Navigate } = ReactRouterDOM;
 
   return (
     <HashRouter>
+      {isPricingModalVisible && <PricingModal />}
+      {isPaymentModalVisible && <PaymentModal />}
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>
           {/* Static pages are always available, regardless of app mode */}

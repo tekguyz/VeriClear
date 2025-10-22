@@ -17,6 +17,7 @@ interface AppState {
   timelineEvents: TimelineEvent[];
   appMode: AppMode;
   isPricingModalVisible: boolean;
+  isPaymentModalVisible: boolean;
 
   // Actions
   toggleLeftPanel: () => void;
@@ -32,6 +33,8 @@ interface AppState {
   setAppMode: (mode: 'demo' | 'app' | null) => void;
   resetState: () => void;
   togglePricingModal: () => void;
+  openPaymentModal: () => void;
+  closePaymentModal: () => void;
 }
 
 const mockAuditRecords: AuditRecord[] = [
@@ -89,11 +92,12 @@ const initialState = {
   complianceMetrics: null,
   currentView: 'dashboard' as AppView,
   leftPanelCollapsed: false,
-  rightPanelVisible: true,
+  rightPanelVisible: false,
   leftPanelDrawerVisible: false,
   timelineEvents: [],
   appMode: null as AppMode,
   isPricingModalVisible: false,
+  isPaymentModalVisible: false,
 };
 
 export const useAppStore = create<AppState>((set) => ({
@@ -139,4 +143,6 @@ export const useAppStore = create<AppState>((set) => ({
   resetState: () => set(initialState),
   
   togglePricingModal: () => set((state) => ({ isPricingModalVisible: !state.isPricingModalVisible })),
+  openPaymentModal: () => set({ isPaymentModalVisible: true, isPricingModalVisible: false }),
+  closePaymentModal: () => set({ isPaymentModalVisible: false }),
 }));

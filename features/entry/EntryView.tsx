@@ -1,8 +1,8 @@
 
+
 import React from 'react';
 import { PlayCircle, Zap, Phone, ListChecks, LayoutDashboard, ArrowDown } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
-import Footer from '../../components/layout/Footer';
 import PricingTable from '../../components/pricing/PricingTable';
 
 const FeatureCard: React.FC<{ icon: React.ElementType, title: string, description: string }> = ({ icon: Icon, title, description }) => (
@@ -78,14 +78,12 @@ const EntryView: React.FC = () => {
 
       {/* Pricing Section */}
       <section className="py-20 px-8 bg-primary-background">
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-4xl mx-auto">
               <h2 className="text-4xl font-bold text-center mb-4">Choose Your Plan</h2>
               <p className="text-center text-gray-400 mb-12">Start for free, scale as you grow.</p>
               <PricingTable source="landing" />
           </div>
       </section>
-      
-      <Footer />
     </div>
   );
 };

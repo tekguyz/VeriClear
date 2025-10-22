@@ -1,14 +1,13 @@
 
+
 import React, { useState, useEffect } from 'react';
 // Fix: Use namespace import for react-router-dom to resolve export issues.
 import * as ReactRouterDOM from 'react-router-dom';
 import { PanelRightOpen, Menu, Info, ArrowLeft, ChevronsLeft } from 'lucide-react';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
-import Footer from './Footer';
 import { useAppStore } from '../../store/appStore';
 import OnboardingModal from '../onboarding/OnboardingModal';
-import PricingModal from '../pricing/PricingModal';
 
 const DemoBanner: React.FC = () => {
     const setAppMode = useAppStore(state => state.setAppMode);
@@ -33,11 +32,25 @@ const Layout: React.FC = () => {
   const leftPanelDrawerVisible = useAppStore((state) => state.leftPanelDrawerVisible);
   const toggleLeftPanelDrawer = useAppStore((state) => state.toggleLeftPanelDrawer);
   const appMode = useAppStore((state) => state.appMode);
-  const isPricingModalVisible = useAppStore((state) => state.isPricingModalVisible);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const { Outlet } = ReactRouterDOM;
+  const { Outlet, useLocation } = ReactRouterDOM;
+  const location = useLocation();
 
   const isDemoMode = appMode === 'demo';
+
+  const getPageTitle = (pathname: string) => {
+    const segment = pathname.split('/').pop() || 'dashboard';
+    switch (segment) {
+        case 'dashboard': return 'Dashboard';
+        case 'live-call': return 'Live Call Analysis';
+        case 'batch-analysis': return 'Batch Analysis';
+        case 'settings': return 'Settings';
+        case 'help': return 'Help & Documentation';
+        default: return 'VeriClear';
+    }
+  };
+
+  const pageTitle = getPageTitle(location.pathname);
 
   useEffect(() => {
     const hasSeenOnboarding = sessionStorage.getItem('hasSeenOnboarding');
@@ -61,7 +74,6 @@ const Layout: React.FC = () => {
   return (
     <div className="flex h-screen w-full bg-primary-background text-text-primary font-sans">
       {showOnboarding && <OnboardingModal onClose={handleCloseOnboarding} />}
-      {isPricingModalVisible && <PricingModal />}
       
       {/* Static Left Panel for md screens and up */}
       <div className="hidden md:flex">
@@ -78,15 +90,20 @@ const Layout: React.FC = () => {
         {isDemoMode && <DemoBanner />}
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
             {/* Mobile Header */}
-            <div className="md:hidden flex items-center mb-4">
-              <button onClick={toggleLeftPanelDrawer} className="p-2 text-gray-400 hover:text-white">
+            <div className="md:hidden grid grid-cols-3 items-center mb-4">
+              <button onClick={toggleLeftPanelDrawer} className="p-2 text-gray-400 hover:text-white justify-self-start">
                 <Menu size={24} />
               </button>
-              <h1 className="text-xl font-bold ml-4">VeriClear</h1>
+              <h1 className="text-xl font-bold text-center col-start-2">{pageTitle}</h1>
             </div>
+
+            {/* Desktop Header */}
+            <div className="hidden md:block text-center mb-6">
+                <h1 className="text-2xl font-bold">{pageTitle}</h1>
+            </div>
+            
             <Outlet />
         </div>
-        <Footer />
       </main>
       
       {/* Right Panel - Conditional rendering based on state */}
@@ -108,10 +125,10 @@ const Layout: React.FC = () => {
       {/* FAB for screens < 1280px to open drawer */}
       <button
         onClick={toggleRightPanel}
-        className="fixed bottom-6 right-6 z-30 p-4 bg-accent-primary text-white rounded-full shadow-lg hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-background focus:ring-accent-primary xl:hidden"
+        className="fixed bottom-4 right-4 z-30 p-3 bg-accent-primary text-white rounded-full shadow-lg hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-background focus:ring-accent-primary xl:hidden"
         aria-label="Toggle audit panel"
       >
-        <PanelRightOpen size={24} />
+        <PanelRightOpen size={20} />
       </button>
 
       {/* Mobile Right Panel Drawer */}

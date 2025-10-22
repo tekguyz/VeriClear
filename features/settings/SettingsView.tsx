@@ -71,6 +71,35 @@ const SettingsView: React.FC = () => {
                 </div>
             </SettingsCard>
 
+            <SettingsCard title="Legal">
+                <div className="space-y-3 text-gray-400">
+                    <div className="flex justify-between items-center">
+                        <span>Terms of Service</span>
+                        <NavLink to="/terms" className="flex items-center gap-1 text-accent-primary hover:underline">
+                            View Document <Link size={14} />
+                        </NavLink>
+                    </div>
+                     <div className="flex justify-between items-center">
+                        <span>Privacy Policy</span>
+                        <NavLink to="/privacy" className="flex items-center gap-1 text-accent-primary hover:underline">
+                            View Document <Link size={14} />
+                        </NavLink>
+                    </div>
+                     <div className="flex justify-between items-center">
+                        <span>AI Ethics</span>
+                        <NavLink to="/ai-ethics" className="flex items-center gap-1 text-accent-primary hover:underline">
+                            View Document <Link size={14} />
+                        </NavLink>
+                    </div>
+                     <div className="flex justify-between items-center">
+                        <span>Cookie Policy</span>
+                        <NavLink to="/cookie-policy" className="flex items-center gap-1 text-accent-primary hover:underline">
+                            View Document <Link size={14} />
+                        </NavLink>
+                    </div>
+                </div>
+            </SettingsCard>
+
              <SettingsCard title="About">
                  <div className="space-y-3 text-gray-400">
                     <div className="flex justify-between">

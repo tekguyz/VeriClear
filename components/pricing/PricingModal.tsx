@@ -6,10 +6,11 @@ import PricingTable from './PricingTable';
 
 const PricingModal: React.FC = () => {
     const togglePricingModal = useAppStore(state => state.togglePricingModal);
+    const openPaymentModal = useAppStore(state => state.openPaymentModal);
     
     return (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div className="relative w-full max-w-6xl bg-panel-background border border-border-color rounded-2xl shadow-2xl max-h-[90vh] flex flex-col">
+            <div className="relative w-full max-w-4xl bg-panel-background border border-border-color rounded-2xl shadow-2xl max-h-[90vh] flex flex-col">
                 <div className="p-8 text-center border-b border-border-color">
                     <h1 className="text-3xl font-bold text-text-primary">Upgrade Your Plan</h1>
                     <p className="text-gray-400 mt-2">Unlock advanced features and higher limits to supercharge your auditing workflow.</p>
@@ -21,7 +22,7 @@ const PricingModal: React.FC = () => {
                 
                 <div className="p-6 border-t border-border-color text-center">
                     <button
-                        onClick={() => alert('Sign-up flow placeholder.')}
+                        onClick={openPaymentModal}
                         className="w-full sm:w-auto px-12 py-3 bg-accent-primary text-white font-semibold rounded-lg shadow-lg hover:bg-indigo-600 transition-transform transform hover:scale-105"
                     >
                         Sign Up for Pro
