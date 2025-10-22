@@ -83,7 +83,6 @@ const HelpView: React.FC = () => {
 
     return (
         <div className="max-w-4xl mx-auto animate-fade-in">
-            <h1 className="text-4xl font-bold text-text-primary mb-2">Help Center</h1>
             <p className="text-lg text-gray-400 mb-8">
                 Your guide to understanding and using VeriClear's features.
             </p>

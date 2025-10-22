@@ -31,7 +31,6 @@ const BatchAnalysisView: React.FC = () => {
 
     return (
         <div className="animate-fade-in">
-            <h1 className="text-3xl font-bold text-text-primary mb-2">Batch Analysis</h1>
             <p className="text-gray-400 mb-8">Upload audio recordings or call transcripts for asynchronous processing and review audit records.</p>
             
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">

@@ -3,11 +3,12 @@
 import React, { useState, useEffect } from 'react';
 // Fix: Use namespace import for react-router-dom to resolve export issues.
 import * as ReactRouterDOM from 'react-router-dom';
-import { PanelRightOpen, Menu, Info, ArrowLeft, ChevronsLeft } from 'lucide-react';
+import { PanelRightOpen, Info, ArrowLeft, ChevronsLeft } from 'lucide-react';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
 import { useAppStore } from '../../store/appStore';
 import OnboardingModal from '../onboarding/OnboardingModal';
+import { Logomark } from './Logomark';
 
 const DemoBanner: React.FC = () => {
     const setAppMode = useAppStore(state => state.setAppMode);
@@ -91,8 +92,8 @@ const Layout: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
             {/* Mobile Header */}
             <div className="md:hidden grid grid-cols-3 items-center mb-4">
-              <button onClick={toggleLeftPanelDrawer} className="p-2 text-gray-400 hover:text-white justify-self-start">
-                <Menu size={24} />
+              <button onClick={toggleLeftPanelDrawer} className="p-1 justify-self-start">
+                <Logomark className="w-8 h-8" />
               </button>
               <h1 className="text-xl font-bold text-center col-start-2">{pageTitle}</h1>
             </div>
@@ -122,21 +123,22 @@ const Layout: React.FC = () => {
         </button>
       )}
 
-      {/* FAB for screens < 1280px to open drawer */}
+      {/* FAB for screens < 1280px to open right drawer */}
       <button
         onClick={toggleRightPanel}
-        className="fixed bottom-4 right-4 z-30 p-3 bg-accent-primary text-white rounded-full shadow-lg hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-background focus:ring-accent-primary xl:hidden"
+        className="fixed bottom-4 right-4 z-30 p-3 bg-panel-background border border-border-color text-gray-400 hover:text-white rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-background focus:ring-accent-primary xl:hidden"
         aria-label="Toggle audit panel"
       >
-        <PanelRightOpen size={20} />
+        <ChevronsLeft size={20} />
       </button>
 
       {/* Mobile Right Panel Drawer */}
-      <div className={`fixed top-0 right-0 h-full bg-panel-background z-40 transition-transform duration-300 ease-in-out xl:hidden ${rightPanelVisible ? 'translate-x-0' : 'translate-x-full'} w-full max-w-sm sm:max-w-md`}>
-         <RightPanel />
+      <div className={`fixed top-0 right-0 h-full w-96 max-w-[calc(100vw-2rem)] bg-panel-background z-50 transition-transform duration-300 ease-in-out xl:hidden ${rightPanelVisible ? 'translate-x-0' : 'translate-x-full'}`}>
+        <RightPanel />
       </div>
+
        {/* Overlay for Mobile Right Panel */}
-      {rightPanelVisible && <div onClick={toggleRightPanel} className="fixed inset-0 bg-black/50 z-30 xl:hidden"></div>}
+      {rightPanelVisible && <div onClick={toggleRightPanel} className="fixed inset-0 bg-black/50 z-40 xl:hidden"></div>}
     </div>
   );
 };

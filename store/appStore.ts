@@ -37,6 +37,18 @@ interface AppState {
   closePaymentModal: () => void;
 }
 
+const getInitialSidebarState = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    try {
+        const item = window.localStorage.getItem('vericlear-sidebar-collapsed');
+        return item ? JSON.parse(item) : false;
+    } catch (error) {
+        console.warn('Error reading sidebar state from localStorage', error);
+        return false;
+    }
+};
+
+
 const mockAuditRecords: AuditRecord[] = [
     { id: '1', timestamp: new Date(), event: 'Disclosure Acknowledged', details: 'Agent confirmed customer understood terms.', status: 'compliant' },
     { id: '2', timestamp: new Date(Date.now() - 2 * 60000), event: 'Sentiment Drop', details: 'Customer sentiment dropped below -0.5.', status: 'warning' },
@@ -91,7 +103,7 @@ const initialState = {
   auditRecords: [],
   complianceMetrics: null,
   currentView: 'dashboard' as AppView,
-  leftPanelCollapsed: false,
+  leftPanelCollapsed: getInitialSidebarState(),
   rightPanelVisible: false,
   leftPanelDrawerVisible: false,
   timelineEvents: [],
@@ -103,7 +115,18 @@ const initialState = {
 export const useAppStore = create<AppState>((set) => ({
   ...initialState,
 
-  toggleLeftPanel: () => set((state) => ({ leftPanelCollapsed: !state.leftPanelCollapsed })),
+  toggleLeftPanel: () => set((state) => {
+    const newCollapsedState = !state.leftPanelCollapsed;
+    if (typeof window !== 'undefined') {
+        try {
+            window.localStorage.setItem('vericlear-sidebar-collapsed', JSON.stringify(newCollapsedState));
+        } catch (error) {
+            console.warn('Error writing sidebar state to localStorage', error);
+        }
+    }
+    return { leftPanelCollapsed: newCollapsedState };
+  }),
+
   toggleRightPanel: () => set((state) => ({ rightPanelVisible: !state.rightPanelVisible })),
   setRightPanelVisible: (visible: boolean) => set({ rightPanelVisible: visible }),
   toggleLeftPanelDrawer: () => set((state) => ({ leftPanelDrawerVisible: !state.leftPanelDrawerVisible })),

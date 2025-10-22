@@ -104,8 +104,6 @@ const DashboardView: React.FC = () => {
 
   return (
     <div className="animate-fade-in">
-      <h1 className="text-3xl font-bold text-text-primary mb-6">Analytics Dashboard</h1>
-      
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
           <MetricCard data={metrics.totalCalls} icon={BarChart} />
           <MetricCard data={metrics.complianceRate} icon={CheckCircle} />
