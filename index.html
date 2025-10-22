@@ -125,16 +125,51 @@
       .animate-slide-in-up {
         animation: slideInUp 0.5s ease-out;
       }
+
+      /* Custom Thin Scrollbar */
+      .thin-scrollbar::-webkit-scrollbar {
+        width: 8px;
+      }
+      .thin-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .thin-scrollbar::-webkit-scrollbar-thumb {
+        background-color: #52525b; /* zinc-600 */
+        border-radius: 20px;
+        border: 3px solid transparent;
+        background-clip: content-box;
+      }
+      html.dark .thin-scrollbar::-webkit-scrollbar-thumb {
+        background-color: #a1a1aa; /* zinc-400 */
+      }
+      
+      /* Resizer Handle Visuals */
+      .resizer-handle:hover {
+        background-color: var(--color-text-accent);
+        opacity: 0.2;
+      }
+
     </style>
     <script>
-      // IIFE to set the theme class on the <html> element before the page loads to prevent FOUC
+      // IIFE to set theme and accent color classes on the <html> element before the page loads to prevent FOUC
       (function() {
         try {
+          // Set Theme
           const theme = localStorage.getItem('vericlear-theme');
-          // Default to dark theme if no setting is found
           if (theme === 'dark' || !theme) {
             document.documentElement.classList.add('dark');
           }
+          
+          // Set Accent Color
+          const accentColor = localStorage.getItem('vericlear-accent-color');
+          const accentColorHover = localStorage.getItem('vericlear-accent-color-hover');
+          if (accentColor && accentColorHover) {
+              const style = document.documentElement.style;
+              style.setProperty('--color-accent-background', accentColor);
+              style.setProperty('--color-accent-background-hover', accentColorHover);
+              style.setProperty('--color-text-accent', accentColor);
+          }
+
         } catch (e) {
           console.warn('Could not set initial theme from localStorage', e);
           document.documentElement.classList.add('dark'); // Fallback to dark

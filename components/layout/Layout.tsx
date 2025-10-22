@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
-import { Info, ArrowLeft, ChevronsLeft, ChevronsRight, X } from 'lucide-react';
+import { Info, ArrowLeft, ChevronsLeft, ChevronsRight, Menu, X } from 'lucide-react';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
 import { useAppStore } from '../../store/appStore';
@@ -27,10 +27,10 @@ const DemoBanner: React.FC = () => {
 const Layout: React.FC = () => {
   const isLeftPanelOpen = useAppStore((state) => state.isLeftPanelOpen);
   const toggleLeftPanelOpen = useAppStore((state) => state.toggleLeftPanelOpen);
-  const setIsLeftPanelOpen = useAppStore((state) => state.setIsLeftPanelOpen);
   const rightPanelVisible = useAppStore((state) => state.rightPanelVisible);
   const toggleRightPanel = useAppStore((state) => state.toggleRightPanel);
   const setRightPanelVisible = useAppStore((state) => state.setRightPanelVisible);
+  const rightPanelWidth = useAppStore((state) => state.rightPanelWidth);
   const appMode = useAppStore((state) => state.appMode);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const { Outlet, useLocation, useNavigate } = ReactRouterDOM;
@@ -58,11 +58,6 @@ const Layout: React.FC = () => {
   // Determines if the mobile header should show a back button
   const isHeaderSubPage = ['Settings', 'Help Center', 'What\'s New'].includes(pageTitle);
 
-  // Determines if the mobile FABs should be hidden
-  const fullScreenPages = ['/settings', '/help', '/changelog'];
-  const isFullScreenPage = fullScreenPages.some(p => location.pathname.startsWith(p));
-
-
   useEffect(() => {
     const hasSeenOnboarding = sessionStorage.getItem('hasSeenOnboarding');
     if (!hasSeenOnboarding) {
@@ -80,9 +75,6 @@ const Layout: React.FC = () => {
     if (window.innerWidth < 1280) {
       setRightPanelVisible(false);
     }
-    // The left panel's initial state is now correctly handled by the store,
-    // which checks localStorage first and then defaults based on screen size.
-    // This effect no longer needs to force the left panel closed on mobile.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -90,25 +82,15 @@ const Layout: React.FC = () => {
     <div className="relative min-h-screen w-full bg-primary-background text-text-primary font-sans">
       {showOnboarding && <OnboardingModal onClose={handleCloseOnboarding} />}
       
-      {/* --- Floating Action Buttons (Unified for Mobile & Desktop) --- */}
-      {!isLeftPanelOpen && (
-        <button
-          onClick={toggleLeftPanelOpen}
-          className={`fixed bottom-4 left-4 z-30 h-12 w-12 items-center justify-center rounded-full border border-border-color bg-panel-background text-accent-primary shadow-lg focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-primary-background animate-fade-in ${isFullScreenPage ? 'lg:hidden' : 'flex'}`}
-          aria-label="Open navigation panel"
-        >
-          <ChevronsRight size={24} />
-        </button>
-      )}
-      
+      {/* --- Right Panel Slide-out Handle (Desktop) --- */}
       <button
         onClick={toggleRightPanel}
-        className={`fixed bottom-4 right-4 z-30 h-12 w-12 items-center justify-center rounded-full border border-border-color bg-panel-background text-icon-primary shadow-lg focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-primary-background animate-fade-in ${isFullScreenPage ? 'lg:hidden' : 'flex'}`}
+        className="hidden xl:flex items-center justify-center fixed top-1/2 -translate-y-1/2 z-30 transition-all duration-300 ease-in-out w-6 h-20 bg-panel-background hover:bg-interactive-background-hover border-y border-l border-border-color rounded-l-md shadow-md"
+        style={{ right: rightPanelVisible ? `${rightPanelWidth}px` : '0' }}
         aria-label="Toggle audit panel"
       >
-        {rightPanelVisible ? <X size={24} /> : <ChevronsLeft size={24} />}
+          {rightPanelVisible ? <ChevronsRight size={20} className="text-icon-primary" /> : <ChevronsLeft size={20} className="text-icon-primary" />}
       </button>
-
 
       {/* --- Panels & Overlays --- */}
       <div className={`fixed top-0 left-0 h-full z-50 transition-transform duration-300 ease-in-out ${isLeftPanelOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -125,31 +107,38 @@ const Layout: React.FC = () => {
       <div className={`flex h-screen w-full transition-all duration-300 ease-in-out ${isLeftPanelOpen ? 'lg:pl-[260px]' : 'lg:pl-0'}`}>
         <main className="flex-1 flex flex-col h-full overflow-hidden">
           {isDemoMode && <DemoBanner />}
-          <div className="flex-1 overflow-y-auto p-4 md:p-8">
-              {/* Mobile Header */}
-              <div className="lg:hidden relative flex items-center justify-center mb-4 h-10">
-                {isHeaderSubPage ? (
-                  <button onClick={() => navigate(-1)} className="p-2 absolute left-0 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary" aria-label="Go back">
-                    <ArrowLeft size={24} />
+          
+          {/* New Unified Header */}
+          <header className="flex-shrink-0 flex items-center justify-between h-16 px-4 border-b border-border-color bg-panel-background/80 backdrop-blur-sm z-10">
+              <div className="flex items-center">
+                  {/* Back button for mobile subpages */}
+                  <button onClick={() => navigate(-1)} className={`p-2 text-text-secondary hover:text-text-primary ${isHeaderSubPage ? 'lg:hidden' : 'hidden'}`} aria-label="Go back">
+                      <ArrowLeft size={24} />
                   </button>
-                ) : (
-                  <div className="absolute left-0 h-10 w-10"></div>
-                )}
-                <h1 className="text-xl font-bold whitespace-nowrap">{pageTitle}</h1>
-              </div>
-
-              {/* Desktop Header */}
-              <div className="hidden lg:flex items-center justify-center text-center mb-6 gap-3">
-                  <h1 className="text-2xl font-bold">{pageTitle}</h1>
+                  {/* Hamburger for all other cases */}
+                  <button onClick={toggleLeftPanelOpen} className={`p-2 text-text-secondary hover:text-text-primary ${isHeaderSubPage ? 'hidden lg:block' : 'block'}`} aria-label="Toggle navigation menu">
+                      <Menu size={24} />
+                  </button>
               </div>
               
+              <h1 className="text-xl font-bold whitespace-nowrap absolute left-1/2 -translate-x-1/2">{pageTitle}</h1>
+
+              <div className="flex items-center">
+                  {/* Right panel toggle for small/medium screens */}
+                  <button onClick={toggleRightPanel} className="p-2 text-text-secondary hover:text-text-primary xl:hidden" aria-label="Toggle audit panel">
+                      <ChevronsLeft size={24} />
+                  </button>
+              </div>
+          </header>
+
+          <div className="flex-1 overflow-y-auto p-4 md:p-8">
               <Outlet />
           </div>
         </main>
         
-        <div className={`transition-all duration-300 ease-in-out ${rightPanelVisible ? 'w-96' : 'w-0'} hidden xl:block`}>
+        <aside style={{ width: rightPanelVisible ? `${rightPanelWidth}px` : '0' }} className={`transition-all duration-300 ease-in-out hidden xl:block flex-shrink-0`}>
            {rightPanelVisible && <RightPanel />}
-        </div>
+        </aside>
       </div>
     </div>
   );

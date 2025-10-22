@@ -188,18 +188,6 @@ const LeftPanel: React.FC = () => {
             {navItems.map(item => <NavItem key={item.to} item={item} onClick={handleLinkClick} />)}
         </ul>
 
-        {/* Collapse Button moved to the bottom */}
-        <div className="px-1">
-            <button
-                onClick={toggleLeftPanelOpen}
-                aria-label="Collapse sidebar"
-                className="flex items-center w-full p-3 rounded-lg transition-colors text-text-secondary hover:bg-interactive-background-hover hover:text-text-primary"
-            >
-                <ChevronsLeft size={20} className="flex-shrink-0" />
-                <span className="ml-3 font-medium whitespace-nowrap">Collapse</span>
-            </button>
-        </div>
-
         {/* User Area */}
         <div className="relative">
             <hr className="border-border-color my-2 mx-1"/>

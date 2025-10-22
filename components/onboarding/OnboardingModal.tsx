@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import * as React from 'react';
 import { ChevronDown, Headset, ListChecks, BarChart, Smartphone, Puzzle, Zap } from 'lucide-react';
 import { Logomark } from '../layout/Logomark';
 
@@ -74,16 +74,17 @@ interface OnboardingModalProps {
 }
 
 const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => {
-  // Fix: Switched to named imports for React hooks to resolve TypeScript error.
-  const [openAccordion, setOpenAccordion] = useState<string>('live-copilot');
-  const modalRef = useRef<HTMLDivElement>(null);
-  const mobileModalRef = useRef<HTMLDivElement>(null);
+  // Fix: Destructured React imports were causing type inference issues with hooks (e.g., generics on useState).
+  // Switched to a namespace import ('* as React') to ensure correct type resolution.
+  const [openAccordion, setOpenAccordion] = React.useState<string>('live-copilot');
+  const modalRef = React.useRef<HTMLDivElement>(null);
+  const mobileModalRef = React.useRef<HTMLDivElement>(null);
 
   const toggleAccordion = (id: string) => {
     setOpenAccordion(openAccordion === id ? '' : id);
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     const isMobile = window.innerWidth < 768;
     const activeModalRef = isMobile ? mobileModalRef : modalRef;
     

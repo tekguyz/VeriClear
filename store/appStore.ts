@@ -26,11 +26,15 @@ interface AppState {
   currentView: AppView;
   isLeftPanelOpen: boolean;
   rightPanelVisible: boolean;
+  rightPanelWidth: number;
   timelineEvents: TimelineEvent[];
   appMode: AppMode;
   isPricingModalVisible: boolean;
   isPaymentModalVisible: boolean;
   theme: 'light' | 'dark';
+  accentColor: string;
+  accentColorHover: string;
+  hapticFeedbackEnabled: boolean;
   toast: ToastState | null;
   confirmDialog: ConfirmDialogState;
   isConfettiVisible: boolean;
@@ -40,6 +44,7 @@ interface AppState {
   setIsLeftPanelOpen: (isOpen: boolean) => void;
   toggleRightPanel: () => void;
   setRightPanelVisible: (visible: boolean) => void;
+  setRightPanelWidth: (width: number) => void;
   startLiveCall: () => void;
   stopLiveCall: () => void;
   addTranscriptionSegment: (segment: string) => void;
@@ -52,6 +57,8 @@ interface AppState {
   openPaymentModal: () => void;
   closePaymentModal: () => void;
   setTheme: (theme: 'light' | 'dark') => void;
+  setAccentColor: (color: string, hoverColor: string) => void;
+  toggleHapticFeedback: () => void;
   showToast: (message: string, type?: 'success' | 'error') => void;
   hideToast: () => void;
   showConfirmDialog: (title: string, message: string, onConfirm: () => void) => void;
@@ -73,6 +80,20 @@ const getInitialLeftPanelState = (): boolean => {
     }
 };
 
+const getInitialRightPanelWidth = (): number => {
+    if (typeof window === 'undefined') return 400;
+    try {
+        const item = window.localStorage.getItem('vericlear-right-panel-width');
+        const width = item ? parseInt(item, 10) : 400;
+        // Add constraints to prevent extreme values
+        return Math.max(320, Math.min(800, width));
+    } catch (error) {
+        console.warn('Error reading right panel width from localStorage', error);
+        return 400; // A wider default
+    }
+};
+
+
 const getInitialTheme = (): 'light' | 'dark' => {
     if (typeof window === 'undefined') return 'dark';
     try {
@@ -84,6 +105,30 @@ const getInitialTheme = (): 'light' | 'dark' => {
     }
 };
 
+const getInitialAccentColor = (): { color: string, hover: string } => {
+    if (typeof window === 'undefined') return { color: '#4285F4', hover: '#3367D6' };
+    try {
+        const color = window.localStorage.getItem('vericlear-accent-color');
+        const hover = window.localStorage.getItem('vericlear-accent-color-hover');
+        if (color && hover) {
+            return { color, hover };
+        }
+    } catch (error) {
+        console.warn('Error reading accent color from localStorage', error);
+    }
+    return { color: '#4285F4', hover: '#3367D6' }; // Default Blue
+};
+
+const getInitialHapticState = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    try {
+        const item = window.localStorage.getItem('vericlear-haptics-enabled');
+        return item ? JSON.parse(item) : false;
+    } catch (error) {
+        console.warn('Error reading haptic state from localStorage', error);
+        return false;
+    }
+};
 
 const mockAuditRecords: AuditRecord[] = [
     { id: '1', timestamp: new Date(), event: 'Disclosure Acknowledged', details: 'Agent confirmed customer understood terms.', status: 'compliant' },
@@ -141,11 +186,15 @@ const initialState = {
   currentView: 'analytics' as AppView,
   isLeftPanelOpen: getInitialLeftPanelState(),
   rightPanelVisible: false,
+  rightPanelWidth: getInitialRightPanelWidth(),
   timelineEvents: [],
   appMode: null as AppMode,
   isPricingModalVisible: false,
   isPaymentModalVisible: false,
   theme: getInitialTheme(),
+  accentColor: getInitialAccentColor().color,
+  accentColorHover: getInitialAccentColor().hover,
+  hapticFeedbackEnabled: getInitialHapticState(),
   toast: null,
   confirmDialog: {
     visible: false,
@@ -168,6 +217,26 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
     set({ theme });
   },
+  
+  setAccentColor: (color, hoverColor) => {
+    try {
+        window.localStorage.setItem('vericlear-accent-color', color);
+        window.localStorage.setItem('vericlear-accent-color-hover', hoverColor);
+    } catch (error) {
+        console.warn('Error writing accent color to localStorage', error);
+    }
+    set({ accentColor: color, accentColorHover: hoverColor });
+  },
+  
+  toggleHapticFeedback: () => set((state) => {
+    const newHapticState = !state.hapticFeedbackEnabled;
+    try {
+        window.localStorage.setItem('vericlear-haptics-enabled', JSON.stringify(newHapticState));
+    } catch (error) {
+        console.warn('Error writing haptic state to localStorage', error);
+    }
+    return { hapticFeedbackEnabled: newHapticState };
+  }),
 
   toggleLeftPanelOpen: () => set((state) => {
     const newOpenState = !state.isLeftPanelOpen;
@@ -193,6 +262,15 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   toggleRightPanel: () => set((state) => ({ rightPanelVisible: !state.rightPanelVisible })),
   setRightPanelVisible: (visible: boolean) => set({ rightPanelVisible: visible }),
+  setRightPanelWidth: (width) => {
+    const constrainedWidth = Math.max(320, Math.min(800, width));
+    try {
+        window.localStorage.setItem('vericlear-right-panel-width', constrainedWidth.toString());
+    } catch (error) {
+        console.warn('Error writing right panel width to localStorage', error);
+    }
+    set({ rightPanelWidth: constrainedWidth });
+  },
   
   setAppMode: (mode) => {
     if (mode === 'demo') {
