@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
-import { LayoutDashboard, Phone, ListChecks, Settings, X, HelpCircle, Sparkles, User, LogOut, Plus, Info, Check, ChevronRight, PanelLeftOpen } from 'lucide-react';
+import { LayoutDashboard, Phone, ListChecks, Settings, X, HelpCircle, User, LogOut, Plus, Info, Check, ChevronRight, PanelLeftOpen, Sparkle } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { Logomark } from './Logomark';
 
@@ -41,8 +41,7 @@ const UserPopupMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     return (
         <div ref={menuRef} className="absolute bottom-full mb-2 left-2 w-64 bg-[#2a2a2e] border border-border-color rounded-xl shadow-2xl p-2 text-sm animate-fade-in z-50">
             <ul className="space-y-1 text-gray-300">
-                <li><button onClick={() => { useAppStore.getState().togglePricingModal(); onClose(); }} className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-700/80"><Sparkles size={20} /> Upgrade plan</button></li>
-                <li><Link to="/settings" onClick={onClose} className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-700/80"><User size={20} /> Personalization</Link></li>
+                <li><button onClick={() => { useAppStore.getState().togglePricingModal(); onClose(); }} className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-700/80"><Sparkle size={20} /> Upgrade plan</button></li>
                 <li><Link to="/settings" onClick={onClose} className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-700/80"><Settings size={20} /> Settings</Link></li>
                 <hr className="border-border-color my-1" />
                 <li><Link to="/help" onClick={onClose} className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-700/80"><HelpCircle size={20} /> Help <ChevronRight size={16} className="ml-auto text-gray-500" /></Link></li>
@@ -77,7 +76,9 @@ const NavItem: React.FC<{ item: { to: string; icon: React.ElementType; label: st
             to={item.to}
             onClick={onClick}
             className={({ isActive }) =>
-              `flex items-center w-full p-3 rounded-lg transition-colors duration-200 text-gray-400 hover:bg-neutral-700/50 hover:text-white ${
+              `flex items-center w-full p-3 rounded-lg transition-colors duration-200 ${
+                isActive ? 'bg-neutral-700/50 text-white' : 'text-gray-400 hover:bg-neutral-700/50 hover:text-white'
+              } ${
                 isCollapsed ? 'justify-center' : ''
               }`
             }
@@ -158,31 +159,36 @@ const LeftPanel: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false }) => {
         <div className="relative">
              <hr className="border-border-color my-2 mx-1"/>
             
-            {/* Upgrade Icon when Collapsed */}
-            {effectiveIsCollapsed && (
-                 <div className="mb-2">
-                    <Tooltip text="Upgrade Plan">
-                        <button
-                            onClick={() => useAppStore.getState().togglePricingModal()}
-                            className="w-full flex justify-center p-2 text-gray-400 hover:text-white rounded-lg transition-colors hover:bg-neutral-700/50"
-                            aria-label="Upgrade Plan"
-                        >
-                            <Sparkles size={20} />
-                        </button>
-                    </Tooltip>
-                 </div>
-            )}
-
-            <button onClick={() => setUserPopupMenuOpen(p => !p)} className={`w-full flex items-center p-2 rounded-lg text-left transition-colors hover:bg-neutral-700/50 ${effectiveIsCollapsed ? 'justify-center' : ''}`}>
-                <div className="w-8 h-8 rounded-full flex-shrink-0 bg-blue-500/50 flex items-center justify-center text-blue-300 font-bold">AU</div>
-                <div className={`ml-3 flex-1 overflow-hidden transition-all duration-200 ${effectiveIsCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
-                    <p className="font-bold text-sm text-white truncate">Demo User</p>
-                    <div className="flex items-center justify-between">
-                        <p className="text-xs text-gray-400">Free</p>
-                        <button onClick={(e) => { e.stopPropagation(); useAppStore.getState().togglePricingModal(); }} className="px-2 py-0.5 text-xs font-semibold bg-gray-600 rounded-full hover:bg-gray-500">Upgrade</button>
+            <ul className="space-y-1 px-1">
+              {/* Upgrade Icon when Collapsed */}
+              {effectiveIsCollapsed && (
+                  <li>
+                      <Tooltip text="Upgrade Plan">
+                          <button
+                              onClick={() => useAppStore.getState().togglePricingModal()}
+                              className="w-full flex justify-center items-center p-3 text-gray-400 hover:text-white rounded-lg transition-colors hover:bg-neutral-700/50"
+                              aria-label="Upgrade Plan"
+                          >
+                             <Sparkle size={24} />
+                          </button>
+                      </Tooltip>
+                  </li>
+              )}
+              {/* User Button */}
+              <li>
+                <button onClick={() => setUserPopupMenuOpen(p => !p)} className={`w-full flex items-center p-3 rounded-lg text-left transition-colors hover:bg-neutral-700/50 ${effectiveIsCollapsed ? 'justify-center' : ''}`}>
+                    <div className="w-8 h-8 rounded-full flex-shrink-0 bg-blue-500/50 flex items-center justify-center text-blue-300 font-bold">AU</div>
+                    <div className={`ml-3 flex-1 overflow-hidden transition-all duration-200 ${effectiveIsCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>
+                        <p className="font-bold text-sm text-white truncate">Demo User</p>
+                        <div className="flex items-center justify-between">
+                            <p className="text-xs text-gray-400">Free</p>
+                            <button onClick={(e) => { e.stopPropagation(); useAppStore.getState().togglePricingModal(); }} className="px-2 py-0.5 text-xs font-semibold bg-gray-600 rounded-full hover:bg-gray-500">Upgrade</button>
+                        </div>
                     </div>
-                </div>
-            </button>
+                </button>
+              </li>
+            </ul>
+
             {isUserPopupMenuOpen && !effectiveIsCollapsed && <UserPopupMenu onClose={() => setUserPopupMenuOpen(false)} />}
         </div>
       </nav>
