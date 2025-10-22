@@ -25,7 +25,7 @@ export const callSentimentSchema = z.enum(['positive', 'neutral', 'negative', 'e
 export type CallSentiment = z.infer<typeof callSentimentSchema>;
 
 export const auditRecordSchema = z.object({
-  problem_summary: z.string().min(50, { message: "Summary must be at least 50 characters." }).max(200, { message: "Summary must be at most 200 characters." }),
+  problem_summary: z.string().min(10, { message: "Summary must be at least 10 characters." }).max(200, { message: "Summary must be at most 200 characters." }),
   solution_steps: z.array(z.string()),
   compliance_flag: z.boolean(),
   call_sentiment: callSentimentSchema,

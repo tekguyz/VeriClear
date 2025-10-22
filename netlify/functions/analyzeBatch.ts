@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { withApiProtection } from '../utils/api';
 
 const auditRecordSchema = z.object({
-  problem_summary: z.string().min(50).max(200),
+  problem_summary: z.string().min(10, { message: "Summary must be at least 10 characters." }).max(200),
   solution_steps: z.array(z.string()),
   compliance_flag: z.boolean(),
   call_sentiment: z.enum(['positive', 'neutral', 'negative', 'escalated']),
@@ -20,7 +20,7 @@ const logAuditRecordFunctionDeclaration: FunctionDeclaration = {
     properties: {
       problem_summary: {
         type: Type.STRING,
-        description: "A concise summary, between 50 and 200 characters, of the core issue or interaction outcome."
+        description: "A concise summary, between 10 and 200 characters, of the core issue or interaction outcome."
       },
       solution_steps: {
         type: Type.ARRAY,
