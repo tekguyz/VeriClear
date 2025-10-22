@@ -158,10 +158,14 @@ const LeftPanel: React.FC = () => {
     <nav className="relative flex flex-col h-full bg-panel-background border-r border-border-color p-3 w-[260px]">
         {/* Logo and App Name */}
         <div className="flex items-center justify-between mb-6 h-10">
-            <div className="flex items-center gap-3">
+            <button 
+                onClick={toggleLeftPanelOpen}
+                className="flex items-center gap-3 p-1 -ml-1 rounded-lg hover:bg-interactive-background-hover transition-colors"
+                aria-label="Collapse sidebar"
+            >
                 <Logomark className="w-8 h-8 flex-shrink-0" />
                 <span className="text-xl font-bold text-text-primary">VeriClear</span>
-            </div>
+            </button>
         </div>
 
         {/* New Audit Button */}
@@ -208,9 +212,9 @@ const LeftPanel: React.FC = () => {
                     aria-expanded={isUserPopupMenuOpen}
                     className="w-full flex items-center p-3 rounded-lg text-left transition-colors hover:bg-interactive-background-hover">
                     <div className="w-8 h-8 rounded-full flex-shrink-0 bg-blue-500/50 flex items-center justify-center text-blue-300 font-bold">AU</div>
-                    <div className="ml-3 overflow-hidden">
+                    <div className="ml-3 overflow-hidden flex-1">
                         <p className="font-bold text-sm text-text-primary truncate">Demo User</p>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-between">
                             <p className="text-xs text-text-secondary">Free</p>
                             <button 
                                 onClick={(e) => { e.stopPropagation(); useAppStore.getState().togglePricingModal(); handleLinkClick(); }} 

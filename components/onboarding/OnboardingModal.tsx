@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, Headset, ListChecks, BarChart, Smartphone, Puzzle, Zap } from 'lucide-react';
 import { Logomark } from '../layout/Logomark';
 
@@ -74,7 +74,7 @@ interface OnboardingModalProps {
 }
 
 const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => {
-  // Fix: Changed React import to provide correct types for hooks and removed incorrect "Fix" comment.
+  // Fix: Switched to named imports for React hooks to resolve TypeScript error.
   const [openAccordion, setOpenAccordion] = useState<string>('live-copilot');
   const modalRef = useRef<HTMLDivElement>(null);
   const mobileModalRef = useRef<HTMLDivElement>(null);

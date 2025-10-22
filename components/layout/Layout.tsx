@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 import { Info, ArrowLeft, ChevronsLeft, ChevronsRight, X } from 'lucide-react';
@@ -89,43 +90,20 @@ const Layout: React.FC = () => {
     <div className="relative min-h-screen w-full bg-primary-background text-text-primary font-sans">
       {showOnboarding && <OnboardingModal onClose={handleCloseOnboarding} />}
       
-      {/* --- Floating Action Buttons --- */}
-      {/* Show left-side buttons only if the panel is closed */}
+      {/* --- Floating Action Buttons (Unified for Mobile & Desktop) --- */}
       {!isLeftPanelOpen && (
-        <>
-          {/* Mobile Left FAB: Hidden on full-screen pages */}
-          <button
-            onClick={toggleLeftPanelOpen}
-            className={`fixed bottom-20 left-4 z-30 h-12 w-12 items-center justify-center rounded-full border border-border-color bg-panel-background text-accent-primary shadow-lg focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-primary-background lg:hidden animate-fade-in ${isFullScreenPage ? 'hidden' : 'flex'}`}
-            aria-label="Open navigation panel"
-          >
-            <ChevronsRight size={24} />
-          </button>
-           {/* Desktop Left FAB */}
-          <button
-            onClick={toggleLeftPanelOpen}
-            aria-label="Open navigation panel"
-            className="fixed top-1/2 -translate-y-1/2 left-0 z-30 hidden items-center justify-center rounded-r-full border-y border-r border-border-color bg-panel-background p-2 text-accent-primary lg:flex animate-fade-in"
-          >
-            <ChevronsRight size={20} />
-          </button>
-        </>
+        <button
+          onClick={toggleLeftPanelOpen}
+          className={`fixed bottom-4 left-4 z-30 h-12 w-12 items-center justify-center rounded-full border border-border-color bg-panel-background text-accent-primary shadow-lg focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-primary-background animate-fade-in ${isFullScreenPage ? 'lg:hidden' : 'flex'}`}
+          aria-label="Open navigation panel"
+        >
+          <ChevronsRight size={24} />
+        </button>
       )}
       
-      {/* --- Persistent Right Panel Button --- */}
-      {/* Desktop Right FAB */}
       <button
         onClick={toggleRightPanel}
-        aria-label={rightPanelVisible ? "Collapse audit panel" : "Expand audit panel"}
-        className="fixed top-1/2 -translate-y-1/2 right-0 z-30 hidden items-center justify-center rounded-l-full border-y border-l border-border-color bg-panel-background p-2 text-icon-primary xl:flex animate-fade-in"
-      >
-        {rightPanelVisible ? <ChevronsRight size={20} /> : <ChevronsLeft size={20} />}
-      </button>
-
-      {/* Mobile Right FAB: Hidden on full-screen pages */}
-      <button
-        onClick={toggleRightPanel}
-        className={`fixed bottom-4 right-4 z-30 h-12 w-12 items-center justify-center rounded-full border border-border-color bg-panel-background text-icon-primary shadow-lg focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-primary-background xl:hidden ${isFullScreenPage ? 'hidden' : 'flex'}`}
+        className={`fixed bottom-4 right-4 z-30 h-12 w-12 items-center justify-center rounded-full border border-border-color bg-panel-background text-icon-primary shadow-lg focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 focus:ring-offset-primary-background animate-fade-in ${isFullScreenPage ? 'lg:hidden' : 'flex'}`}
         aria-label="Toggle audit panel"
       >
         {rightPanelVisible ? <X size={24} /> : <ChevronsLeft size={24} />}
