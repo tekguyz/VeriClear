@@ -81,40 +81,46 @@ const handler = async (req: Request) => {
     });
     
     const functionCall = response.functionCalls?.[0];
-    
-    let validatedData: z.infer<typeof auditRecordSchema>;
+    let auditData: any = null;
 
-    if (functionCall?.name === 'log_audit_record') {
-        const validationResult = auditRecordSchema.safeParse(functionCall.args);
-        if (!validationResult.success) {
-            console.error("Zod validation failed on function call args:", validationResult.error.flatten());
-            throw new Error("Gemini function call args failed validation.");
-        }
-        validatedData = validationResult.data;
-    } else {
-        // Fallback: If no function call, try to parse the text response as JSON.
-        // The model sometimes returns a JSON object in a markdown block instead of a function call.
+    // Attempt 1: Use the structured function call if available and valid.
+    if (functionCall?.name === 'log_audit_record' && functionCall.args) {
+        auditData = functionCall.args;
+    } 
+    // Attempt 2: If no valid function call, fall back to parsing the text response.
+    // This handles cases where the model returns a JSON object in a markdown block.
+    else {
         const textResponse = response.text;
         console.warn("Gemini did not return a function call. Falling back to parsing text response.", textResponse);
-
-        // Regex to extract JSON from markdown code blocks like ```json ... ```
+        
+        // Regex to extract JSON from markdown code blocks like ```json ... ``` or just the string.
         const jsonMatch = textResponse.match(/```(?:json)?\s*([\s\S]+?)\s*```/);
         const jsonString = jsonMatch ? jsonMatch[1].trim() : textResponse.trim();
         
-        try {
-            const parsedJson = JSON.parse(jsonString);
-            const validationResult = auditRecordSchema.safeParse(parsedJson);
-            if (!validationResult.success) {
-                console.error("Zod validation failed on text response JSON:", validationResult.error.flatten());
-                throw new Error("Gemini text response JSON failed validation.");
+        if (jsonString) {
+            try {
+                auditData = JSON.parse(jsonString);
+            } catch (e) {
+                console.error(`Failed to parse text response as JSON. Response was: "${textResponse}"`, e);
+                auditData = null; // Ensure auditData is null if parsing fails
             }
-            validatedData = validationResult.data;
-        } catch (e) {
-            const errorMessage = `Failed to get a valid structured response from Gemini. Text response was: "${textResponse}"`;
-            console.error(errorMessage, e);
-            throw new Error(errorMessage);
         }
     }
+
+    // Final check: If we couldn't get structured data either way, throw an error.
+    if (!auditData) {
+        throw new Error(`Failed to get a structured response from Gemini. Response text: "${response.text}"`);
+    }
+
+    // Validate the extracted data against the Zod schema, regardless of source.
+    const validationResult = auditRecordSchema.safeParse(auditData);
+    if (!validationResult.success) {
+        console.error("Zod validation failed:", validationResult.error.flatten());
+        console.error("Data that failed validation:", auditData);
+        throw new Error("Gemini response failed validation against the schema.");
+    }
+
+    const validatedData = validationResult.data;
 
     // Here you would insert validatedData into the 'audit_records' table.
     // logData('audit_records', validatedData);
