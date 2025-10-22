@@ -1,9 +1,11 @@
 
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+// Fix: Use namespace import for react-router-dom to resolve export issues.
+import * as ReactRouterDOM from 'react-router-dom';
 import StaticPageLayout from '../../components/layout/StaticPageLayout';
 
 const CaseStudyView: React.FC = () => {
+  const { useParams, Link } = ReactRouterDOM;
   const { slug } = useParams();
 
   // In a real app, you would fetch data based on the slug.

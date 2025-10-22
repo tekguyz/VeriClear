@@ -1,6 +1,7 @@
 
 import React, { Suspense } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+// Fix: Use namespace import for react-router-dom to resolve export issues.
+import * as ReactRouterDOM from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import BatchAnalysisView from './components/batch/BatchAnalysisView';
 import { useAppStore } from './store/appStore';
@@ -26,6 +27,7 @@ const LoadingSpinner: React.FC = () => (
 
 const App: React.FC = () => {
   const appMode = useAppStore((state) => state.appMode);
+  const { HashRouter, Routes, Route, Navigate } = ReactRouterDOM;
 
   return (
     <HashRouter>

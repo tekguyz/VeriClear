@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Phone, ListChecks, Settings, ChevronsLeft, ChevronsRight, X, HelpCircle } from 'lucide-react';
+// Fix: Use namespace import for react-router-dom to resolve export issues.
+import * as ReactRouterDOM from 'react-router-dom';
+import { LayoutDashboard, Phone, ListChecks, Settings, ChevronsLeft, ChevronsRight, X, HelpCircle, Sparkles } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 
 const navItems = [
@@ -20,6 +21,8 @@ const LeftPanel: React.FC<LeftPanelProps> = ({ isDrawer = false }) => {
   const leftPanelCollapsed = useAppStore((state) => state.leftPanelCollapsed);
   const toggleLeftPanel = useAppStore((state) => state.toggleLeftPanel);
   const toggleLeftPanelDrawer = useAppStore((state) => state.toggleLeftPanelDrawer);
+  const togglePricingModal = useAppStore((state) => state.togglePricingModal);
+  const { NavLink } = ReactRouterDOM;
 
   const handleLinkClick = () => {
     if (isDrawer) {
@@ -67,7 +70,14 @@ const LeftPanel: React.FC<LeftPanelProps> = ({ isDrawer = false }) => {
       </ul>
       
       {!isDrawer && (
-        <div className="mt-auto">
+        <div className="mt-auto space-y-2">
+           <button
+              onClick={togglePricingModal}
+              className={`flex items-center w-full p-3 rounded-lg transition-colors duration-200 text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 ${isCollapsed ? 'justify-center' : ''}`}
+           >
+              <Sparkles size={24} />
+              {!isCollapsed && <span className="ml-4 font-medium">Upgrade to Pro</span>}
+           </button>
            <button
               onClick={toggleLeftPanel}
               className={`flex items-center w-full p-3 rounded-lg transition-colors duration-200 text-gray-400 hover:bg-gray-700 hover:text-white ${isCollapsed ? 'justify-center' : ''}`}

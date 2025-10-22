@@ -11,7 +11,7 @@ const ACCEPTED_FORMATS = {
   'text/plain': ['.txt'],
   'application/pdf': ['.pdf'],
 };
-const MAX_SIZE_MB = 100;
+const MAX_SIZE_MB = 15;
 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
 interface FileUploaderProps {
@@ -173,7 +173,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onProgressUpdate, onAnalysi
                         <UploadCloud className="text-gray-500" size={48} />
                     </div>
                     <p className="font-semibold text-text-primary">Click to upload or drag and drop</p>
-                    <p className="text-sm text-gray-400">MP3, WAV, M4A, TXT, PDF (Max 100MB)</p>
+                    <p className="text-sm text-gray-400">MP3, WAV, M4A, TXT, PDF (Max 15MB)</p>
                 </label>
                  {isDemoMode && <div className="absolute inset-0 bg-panel-background/70 rounded-2xl flex items-center justify-center"><span className="px-4 py-2 bg-black/70 text-white rounded-md font-semibold">Disabled in Demo Mode</span></div>}
             </div>

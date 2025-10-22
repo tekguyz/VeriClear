@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { Trash2, Sun, Moon, Link } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
-import { NavLink } from 'react-router-dom';
+// Fix: Use namespace import for react-router-dom to resolve export issues.
+import * as ReactRouterDOM from 'react-router-dom';
 
 const SettingsCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div className="bg-panel-background border border-border-color rounded-2xl p-6">
@@ -14,6 +15,7 @@ const SettingsCard: React.FC<{ title: string; children: React.ReactNode }> = ({ 
 const SettingsView: React.FC = () => {
     const resetState = useAppStore((state) => state.resetState);
     const [isDarkMode, setIsDarkMode] = useState(true); // Placeholder state
+    const { NavLink } = ReactRouterDOM;
 
     const handleClearCache = () => {
         if (window.confirm("Are you sure you want to clear all local data? This will reset your notes and checklist.")) {

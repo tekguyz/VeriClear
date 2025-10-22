@@ -1,12 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+// Fix: Use namespace import for react-router-dom to resolve export issues.
+import * as ReactRouterDOM from 'react-router-dom';
 import { PanelRightOpen, Menu, Info, ArrowLeft, ChevronsLeft } from 'lucide-react';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
 import Footer from './Footer';
 import { useAppStore } from '../../store/appStore';
 import OnboardingModal from '../onboarding/OnboardingModal';
+import PricingModal from '../pricing/PricingModal';
 
 const DemoBanner: React.FC = () => {
     const setAppMode = useAppStore(state => state.setAppMode);
@@ -31,7 +33,9 @@ const Layout: React.FC = () => {
   const leftPanelDrawerVisible = useAppStore((state) => state.leftPanelDrawerVisible);
   const toggleLeftPanelDrawer = useAppStore((state) => state.toggleLeftPanelDrawer);
   const appMode = useAppStore((state) => state.appMode);
+  const isPricingModalVisible = useAppStore((state) => state.isPricingModalVisible);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const { Outlet } = ReactRouterDOM;
 
   const isDemoMode = appMode === 'demo';
 
@@ -57,6 +61,7 @@ const Layout: React.FC = () => {
   return (
     <div className="flex h-screen w-full bg-primary-background text-text-primary font-sans">
       {showOnboarding && <OnboardingModal onClose={handleCloseOnboarding} />}
+      {isPricingModalVisible && <PricingModal />}
       
       {/* Static Left Panel for md screens and up */}
       <div className="hidden md:flex">

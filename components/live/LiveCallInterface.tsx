@@ -7,6 +7,7 @@ import { useAppStore } from '../../store/appStore';
 import AudioVisualizer from './AudioVisualizer';
 
 type CallState = 'idle' | 'connecting' | 'active' | 'error';
+const MAX_CALL_DURATION_SECONDS = 900; // 15 minutes
 
 // Fix: Per Gemini API guidelines, do not use external libraries for encoding.
 // Implement the encode function manually.
@@ -68,15 +69,6 @@ const LiveCallInterface: React.FC = () => {
         transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [transcripts]);
 
-    useEffect(() => {
-        // Fix: Use 'number' for interval ID type in browser environments instead of 'NodeJS.Timeout'.
-        let interval: number;
-        if (callState === 'active') {
-            interval = setInterval(() => setTimer(t => t + 1), 1000);
-        }
-        return () => clearInterval(interval);
-    }, [callState]);
-
     const addTranscript = useCallback((speaker: TranscriptSpeaker, text: string, isFinal = false) => {
         if (!text) return;
         setTranscripts(prev => {
@@ -100,6 +92,51 @@ const LiveCallInterface: React.FC = () => {
             details,
         });
     }, [addTranscript, addTimelineEvent]);
+
+    const stopCall = useCallback((reason?: 'user' | 'duration_limit' | 'api_close' | 'error') => {
+        if (callState === 'idle') return;
+        
+        sessionPromiseRef.current?.then(session => session.close());
+        processorRef.current?.disconnect();
+        mediaStreamRef.current?.getTracks().forEach(track => track.stop());
+        audioContextRef.current?.close();
+
+        sessionPromiseRef.current = null;
+        processorRef.current = null;
+        mediaStreamRef.current = null;
+        audioContextRef.current = null;
+
+        if (reason === 'duration_limit') {
+            const message = `Call automatically ended after ${MAX_CALL_DURATION_SECONDS / 60} minutes to conserve resources.`;
+            addTranscript('system', message, true);
+            addTimelineEvent({
+                type: 'system_message',
+                title: 'Call Duration Limit Reached',
+                details: message,
+            });
+        }
+
+        setAnalyserNode(null);
+        setCallState('idle');
+    }, [callState, addTranscript, addTimelineEvent]);
+
+    useEffect(() => {
+        let interval: number;
+        if (callState === 'active') {
+            interval = setInterval(() => {
+                setTimer(t => {
+                    const newTime = t + 1;
+                    if (newTime >= MAX_CALL_DURATION_SECONDS) {
+                        clearInterval(interval);
+                        stopCall('duration_limit');
+                        return MAX_CALL_DURATION_SECONDS;
+                    }
+                    return newTime;
+                });
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [callState, stopCall]);
 
 
     const startCall = async () => {
@@ -150,7 +187,7 @@ const LiveCallInterface: React.FC = () => {
                             msg.toolCall.functionCalls.forEach(handleFunctionCall);
                         }
                     },
-                    onclose: () => stopCall(),
+                    onclose: () => stopCall('api_close'),
                     onerror: (e) => {
                         console.error(e);
                         setCallState('error');
@@ -161,6 +198,7 @@ const LiveCallInterface: React.FC = () => {
                            title: 'Live Connection Failed',
                            details: errorDetails,
                         });
+                        stopCall('error');
                     },
                 }
             });
@@ -189,22 +227,6 @@ const LiveCallInterface: React.FC = () => {
         }
     };
     
-    const stopCall = useCallback(() => {
-        if (callState === 'idle') return;
-        
-        sessionPromiseRef.current?.then(session => session.close());
-        processorRef.current?.disconnect();
-        mediaStreamRef.current?.getTracks().forEach(track => track.stop());
-        audioContextRef.current?.close();
-
-        sessionPromiseRef.current = null;
-        processorRef.current = null;
-        mediaStreamRef.current = null;
-        audioContextRef.current = null;
-
-        setAnalyserNode(null);
-        setCallState('idle');
-    }, [callState]);
     
     const formatTime = (seconds: number) => new Date(seconds * 1000).toISOString().substr(14, 5);
     
@@ -224,7 +246,7 @@ const LiveCallInterface: React.FC = () => {
                     <span className="font-mono text-lg">{formatTime(timer)}</span>
                 </div>
                 <button
-                    onClick={callState === 'active' ? stopCall : startCall}
+                    onClick={callState === 'active' ? () => stopCall('user') : startCall}
                     disabled={isDemoMode || callState === 'connecting'}
                     className={`relative flex items-center justify-center w-40 h-12 rounded-full font-semibold text-white transition-all duration-300 ${
                         callState === 'active' ? 'bg-red-500 hover:bg-red-600' : 'bg-accent-primary hover:bg-indigo-500'

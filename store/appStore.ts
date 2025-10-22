@@ -16,6 +16,7 @@ interface AppState {
   leftPanelDrawerVisible: boolean; // For mobile drawer
   timelineEvents: TimelineEvent[];
   appMode: AppMode;
+  isPricingModalVisible: boolean;
 
   // Actions
   toggleLeftPanel: () => void;
@@ -30,6 +31,7 @@ interface AppState {
   addTimelineEvent: (event: Omit<TimelineEvent, 'id' | 'timestamp'>) => void;
   setAppMode: (mode: 'demo' | 'app' | null) => void;
   resetState: () => void;
+  togglePricingModal: () => void;
 }
 
 const mockAuditRecords: AuditRecord[] = [
@@ -91,6 +93,7 @@ const initialState = {
   leftPanelDrawerVisible: false,
   timelineEvents: [],
   appMode: null as AppMode,
+  isPricingModalVisible: false,
 };
 
 export const useAppStore = create<AppState>((set) => ({
@@ -134,4 +137,6 @@ export const useAppStore = create<AppState>((set) => ({
   })),
 
   resetState: () => set(initialState),
+  
+  togglePricingModal: () => set((state) => ({ isPricingModalVisible: !state.isPricingModalVisible })),
 }));
