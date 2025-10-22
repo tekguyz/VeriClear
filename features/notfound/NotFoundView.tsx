@@ -15,7 +15,7 @@ const NotFoundView: React.FC = () => {
       </p>
       <Link
         to="/"
-        className="px-6 py-3 bg-accent-primary text-white font-semibold rounded-lg shadow-lg hover:bg-indigo-600 transition-colors"
+        className="px-6 py-3 bg-accent-primary text-white font-semibold rounded-lg shadow-lg hover:bg-blue-700 transition-colors"
       >
         Return to Home
       </Link>

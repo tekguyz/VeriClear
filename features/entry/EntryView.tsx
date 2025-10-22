@@ -40,7 +40,7 @@ const EntryView: React.FC = () => {
             </button>
             <button
               onClick={() => setAppMode('app')}
-              className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-accent-primary text-white text-lg font-semibold rounded-lg shadow-lg hover:bg-indigo-600 transition-transform transform hover:scale-105"
+              className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-accent-primary text-white text-lg font-semibold rounded-lg shadow-lg hover:bg-blue-700 transition-transform transform hover:scale-105"
             >
               <Zap size={28} />
               Start Full Application

@@ -98,7 +98,7 @@ const PaymentModal: React.FC = () => {
                         onClick={handleSubmit}
                         disabled={status !== 'idle'}
                         className={`w-full h-12 flex items-center justify-center px-12 py-3 text-white font-semibold rounded-lg shadow-lg transition-colors transform ${
-                            status === 'success' ? 'bg-green-600' : 'bg-accent-primary hover:bg-indigo-600'
+                            status === 'success' ? 'bg-green-600' : 'bg-accent-primary hover:bg-blue-700'
                         } disabled:bg-gray-600 disabled:cursor-not-allowed`}
                     >
                         {renderButtonContent()}

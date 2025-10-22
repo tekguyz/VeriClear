@@ -6,7 +6,6 @@ import PricingTable from './PricingTable';
 
 const PricingModal: React.FC = () => {
     const togglePricingModal = useAppStore(state => state.togglePricingModal);
-    const openPaymentModal = useAppStore(state => state.openPaymentModal);
     
     return (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
@@ -18,15 +17,6 @@ const PricingModal: React.FC = () => {
                 
                 <div className="flex-1 overflow-y-auto p-8">
                     <PricingTable source="modal" />
-                </div>
-                
-                <div className="p-6 border-t border-border-color text-center">
-                    <button
-                        onClick={openPaymentModal}
-                        className="w-full sm:w-auto px-12 py-3 bg-accent-primary text-white font-semibold rounded-lg shadow-lg hover:bg-indigo-600 transition-transform transform hover:scale-105"
-                    >
-                        Sign Up for Pro
-                    </button>
                 </div>
 
                 <button onClick={togglePricingModal} className="absolute top-4 right-4 text-gray-500 hover:text-white">

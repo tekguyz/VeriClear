@@ -233,7 +233,7 @@ const LiveCallInterface: React.FC = () => {
     const getSpeakerIcon = (speaker: TranscriptSpeaker) => {
         switch (speaker) {
             case 'customer': return <User size={20} className="text-blue-400" />;
-            case 'agent': return <Bot size={20} className="text-indigo-400" />;
+            case 'agent': return <Bot size={20} className="text-blue-400" />;
             default: return <AlertCircle size={20} className="text-gray-500" />;
         }
     };
@@ -249,7 +249,7 @@ const LiveCallInterface: React.FC = () => {
                     onClick={callState === 'active' ? () => stopCall('user') : startCall}
                     disabled={isDemoMode || callState === 'connecting'}
                     className={`relative flex items-center justify-center w-40 h-12 rounded-full font-semibold text-white transition-all duration-300 ${
-                        callState === 'active' ? 'bg-red-500 hover:bg-red-600' : 'bg-accent-primary hover:bg-indigo-500'
+                        callState === 'active' ? 'bg-red-500 hover:bg-red-600' : 'bg-accent-primary hover:bg-blue-600'
                     } disabled:bg-gray-600 disabled:cursor-not-allowed`}
                     title={isDemoMode ? "Live call is disabled in Demo Mode" : ""}
                 >

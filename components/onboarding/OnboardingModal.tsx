@@ -105,7 +105,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => {
         <div className="p-6 border-t border-border-color text-center">
             <button
                 onClick={onClose}
-                className="w-full sm:w-auto px-12 py-3 bg-accent-primary text-white font-semibold rounded-lg shadow-lg hover:bg-indigo-600 transition-transform transform hover:scale-105"
+                className="w-full sm:w-auto px-12 py-3 bg-accent-primary text-white font-semibold rounded-lg shadow-lg hover:bg-blue-700 transition-transform transform hover:scale-105"
             >
                 Get Started
             </button>

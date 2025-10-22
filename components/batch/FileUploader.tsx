@@ -205,7 +205,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onProgressUpdate, onAnalysi
                      <button 
                         onClick={startAnalysis} 
                         disabled={isDemoMode || files.length === 0 || files.some(f => f.status === 'uploading' || f.status === 'analyzing')}
-                        className="mt-6 w-full bg-accent-primary text-white py-2.5 rounded-lg font-semibold hover:bg-indigo-600 flex items-center justify-center disabled:bg-gray-600 disabled:cursor-not-allowed">
+                        className="mt-6 w-full bg-accent-primary text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 flex items-center justify-center disabled:bg-gray-600 disabled:cursor-not-allowed">
                         Start Analysis
                     </button>
                 </div>

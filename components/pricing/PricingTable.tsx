@@ -77,7 +77,7 @@ const PricingTable: React.FC<PricingTableProps> = ({ source }) => {
                     </ul>
                     <button 
                         onClick={() => handleCTAClick(plan.name)}
-                        className={`w-full py-3 rounded-lg font-semibold transition-colors ${plan.popular ? 'bg-accent-primary text-white hover:bg-indigo-500' : 'bg-gray-700 text-white hover:bg-gray-600'}`}>
+                        className={`w-full py-3 rounded-lg font-semibold transition-colors ${plan.popular ? 'bg-accent-primary text-white hover:bg-blue-600' : 'bg-gray-700 text-white hover:bg-gray-600'}`}>
                         {plan.cta}
                     </button>
                 </div>

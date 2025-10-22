@@ -29,7 +29,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ analyserNode, isActiv
       canvasCtx.fillStyle = '#0a0a0a'; // primary-background
       canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
       canvasCtx.lineWidth = 2;
-      canvasCtx.strokeStyle = '#6366f1'; // accent-primary
+      canvasCtx.strokeStyle = '#4285F4'; // accent-primary
       canvasCtx.beginPath();
 
       const sliceWidth = (canvas.width * 1.0) / bufferLength;
