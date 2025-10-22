@@ -44,10 +44,8 @@ const getEventAppearance = (type: TimelineEventType) => {
 
 const NotesTimeline: React.FC = () => {
     const [note, setNote] = useState('');
-    const { timelineEvents, appMode } = useAppStore(state => ({
-        timelineEvents: state.timelineEvents,
-        appMode: state.appMode
-    }));
+    const timelineEvents = useAppStore(state => state.timelineEvents);
+    const appMode = useAppStore(state => state.appMode);
     const isDemoMode = appMode === 'demo';
     const debouncedNote = useDebounce(note, 3000); // 3-second debounce
 

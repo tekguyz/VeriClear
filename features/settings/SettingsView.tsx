@@ -12,7 +12,7 @@ const SettingsCard: React.FC<{ title: string; children: React.ReactNode }> = ({ 
 );
 
 const SettingsView: React.FC = () => {
-    const { resetState } = useAppStore();
+    const resetState = useAppStore((state) => state.resetState);
     const [isDarkMode, setIsDarkMode] = useState(true); // Placeholder state
 
     const handleClearCache = () => {

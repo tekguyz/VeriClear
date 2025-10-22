@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Phone, ListChecks, Settings, ChevronsLeft, ChevronsRight, X, HelpCircle } from 'lucide-react';
@@ -16,7 +17,9 @@ interface LeftPanelProps {
 }
 
 const LeftPanel: React.FC<LeftPanelProps> = ({ isDrawer = false }) => {
-  const { leftPanelCollapsed, toggleLeftPanel, toggleLeftPanelDrawer } = useAppStore();
+  const leftPanelCollapsed = useAppStore((state) => state.leftPanelCollapsed);
+  const toggleLeftPanel = useAppStore((state) => state.toggleLeftPanel);
+  const toggleLeftPanelDrawer = useAppStore((state) => state.toggleLeftPanelDrawer);
 
   const handleLinkClick = () => {
     if (isDrawer) {
@@ -29,8 +32,8 @@ const LeftPanel: React.FC<LeftPanelProps> = ({ isDrawer = false }) => {
 
   return (
     <nav
-      className={`relative flex flex-col h-full bg-panel-background border-r border-border-color p-4 transition-all duration-300 ease-in-out ${
-        isCollapsed ? 'w-16' : 'w-80'
+      className={`relative flex flex-col h-full bg-panel-background border-r border-border-color transition-all duration-300 ease-in-out ${
+        isCollapsed ? 'w-20 p-3' : 'w-80 p-4'
       }`}
     >
       <div className={`flex items-center mb-10 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>

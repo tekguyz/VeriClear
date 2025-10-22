@@ -53,11 +53,9 @@ const LiveCallInterface: React.FC = () => {
     const [transcripts, setTranscripts] = useState<TranscriptSegment[]>([]);
     const [timer, setTimer] = useState(0);
     const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
-    const { addTimelineEvent, startStoreCall, appMode } = useAppStore(state => ({
-        addTimelineEvent: state.addTimelineEvent,
-        startStoreCall: state.startLiveCall,
-        appMode: state.appMode,
-    }));
+    const addTimelineEvent = useAppStore(state => state.addTimelineEvent);
+    const startStoreCall = useAppStore(state => state.startLiveCall);
+    const appMode = useAppStore(state => state.appMode);
     const isDemoMode = appMode === 'demo';
 
     const audioContextRef = useRef<AudioContext | null>(null);

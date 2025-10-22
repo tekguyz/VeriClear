@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { PanelRightOpen, Menu, Info, ArrowLeft } from 'lucide-react';
+import { PanelRightOpen, Menu, Info, ArrowLeft, ChevronsLeft } from 'lucide-react';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
 import Footer from './Footer';
@@ -24,28 +24,21 @@ const DemoBanner: React.FC = () => {
 }
 
 const Layout: React.FC = () => {
-  const { 
-    rightPanelVisible, 
-    toggleRightPanel, 
-    setRightPanelVisible,
-    leftPanelDrawerVisible,
-    toggleLeftPanelDrawer,
-    appMode,
-  } = useAppStore();
+  const rightPanelVisible = useAppStore((state) => state.rightPanelVisible);
+  const toggleRightPanel = useAppStore((state) => state.toggleRightPanel);
+  const setRightPanelVisible = useAppStore((state) => state.setRightPanelVisible);
+  const leftPanelDrawerVisible = useAppStore((state) => state.leftPanelDrawerVisible);
+  const toggleLeftPanelDrawer = useAppStore((state) => state.toggleLeftPanelDrawer);
+  const appMode = useAppStore((state) => state.appMode);
 
   const isDemoMode = appMode === 'demo';
 
   React.useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1280) {
-        setRightPanelVisible(true);
-      } else {
-        setRightPanelVisible(false);
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    handleResize(); // initial check
-    return () => window.removeEventListener('resize', handleResize);
+    // On initial load, if the screen is small, hide the right panel drawer by default.
+    // This effect runs only once and does not listen for resizes, giving the user full control.
+    if (window.innerWidth < 1280) {
+      setRightPanelVisible(false);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -82,7 +75,18 @@ const Layout: React.FC = () => {
          {rightPanelVisible && <RightPanel />}
       </div>
       
-      {/* FAB for screens < 1280px */}
+       {/* Expand button for collapsed right panel on desktop */}
+      {!rightPanelVisible && (
+        <button
+            onClick={toggleRightPanel}
+            title="Expand audit panel"
+            className="fixed top-1/2 -translate-y-1/2 right-0 z-20 p-2 bg-panel-background border-y border-l border-border-color rounded-l-full text-gray-400 hover:text-white hidden xl:flex items-center justify-center animate-fade-in"
+        >
+            <ChevronsLeft size={18} />
+        </button>
+      )}
+
+      {/* FAB for screens < 1280px to open drawer */}
       <button
         onClick={toggleRightPanel}
         className="fixed bottom-6 right-6 z-30 p-4 bg-accent-primary text-white rounded-full shadow-lg hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-background focus:ring-accent-primary xl:hidden"
