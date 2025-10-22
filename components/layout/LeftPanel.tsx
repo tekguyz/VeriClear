@@ -51,6 +51,39 @@ const UserPopupMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     );
 };
 
+// --- New Audit Popup Menu ---
+const NewAuditMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+    const menuRef = useRef<HTMLDivElement>(null);
+    useOnClickOutside(menuRef, onClose);
+    const { Link } = ReactRouterDOM;
+
+    return (
+        <div ref={menuRef} className="absolute top-full mt-2 left-1 w-72 bg-[#2a2a2e] border border-border-color rounded-xl shadow-2xl p-2 text-sm animate-fade-in z-50">
+            <p className="px-3 py-2 text-xs text-gray-400 font-semibold">Start a new audit</p>
+            <ul className="space-y-1 text-gray-300">
+                <li>
+                    <Link to="/live-call" onClick={onClose} className="flex items-start gap-3 p-3 rounded-lg hover:bg-neutral-700/80">
+                        <Phone size={20} className="mt-1 flex-shrink-0 text-gray-400" />
+                        <div>
+                            <p className="font-semibold">Live Call Analysis</p>
+                            <p className="text-xs text-gray-400">Monitor a call in real-time with an AI co-pilot.</p>
+                        </div>
+                    </Link>
+                </li>
+                 <li>
+                    <Link to="/batch-analysis" onClick={onClose} className="flex items-start gap-3 p-3 rounded-lg hover:bg-neutral-700/80">
+                        <ListChecks size={20} className="mt-1 flex-shrink-0 text-gray-400" />
+                        <div>
+                            <p className="font-semibold">Batch File Analysis</p>
+                            <p className="text-xs text-gray-400">Upload recordings for asynchronous processing.</p>
+                        </div>
+                    </Link>
+                </li>
+            </ul>
+        </div>
+    );
+};
+
 
 // --- Main Sidebar Component ---
 const navItems = [
@@ -102,12 +135,21 @@ const LeftPanel: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false }) => {
   const toggleLeftPanelDrawer = useAppStore((state) => state.toggleLeftPanelDrawer);
   
   const [isUserPopupMenuOpen, setUserPopupMenuOpen] = useState(false);
+  const [isNewAuditMenuOpen, setNewAuditMenuOpen] = useState(false);
 
   const handleLinkClick = () => {
     if (isDrawer) toggleLeftPanelDrawer();
   };
 
   const effectiveIsCollapsed = isDrawer ? false : isCollapsed;
+
+  // Close menus when sidebar collapses
+  useEffect(() => {
+    if (effectiveIsCollapsed) {
+        setNewAuditMenuOpen(false);
+        setUserPopupMenuOpen(false);
+    }
+  }, [effectiveIsCollapsed]);
 
   return (
     <>
@@ -140,12 +182,16 @@ const LeftPanel: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false }) => {
             )}
         </div>
 
-        {/* New Chat Button */}
-        <div className="px-1 mb-4">
-             <button className={`flex items-center w-full p-3 rounded-lg text-left font-semibold transition-colors text-gray-400 hover:bg-neutral-700/50 hover:text-white ${effectiveIsCollapsed ? 'justify-center' : ''}`}>
+        {/* New Audit Button */}
+        <div className="relative px-1 mb-4">
+             <button
+                onClick={() => setNewAuditMenuOpen(p => !p)}
+                className={`flex items-center w-full p-3 rounded-lg text-left font-semibold transition-colors text-gray-400 hover:bg-neutral-700/50 hover:text-white ${effectiveIsCollapsed ? 'justify-center' : ''}`}
+             >
                  <Plus size={20} className="flex-shrink-0" />
                  <span className={`ml-3 whitespace-nowrap overflow-hidden transition-all duration-200 ${effectiveIsCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>New Audit</span>
              </button>
+             {isNewAuditMenuOpen && !effectiveIsCollapsed && <NewAuditMenu onClose={() => setNewAuditMenuOpen(false)} />}
         </div>
 
 
@@ -166,7 +212,7 @@ const LeftPanel: React.FC<{ isDrawer?: boolean }> = ({ isDrawer = false }) => {
                       <Tooltip text="Upgrade Plan">
                           <button
                               onClick={() => useAppStore.getState().togglePricingModal()}
-                              className="w-full flex justify-center items-center p-3 text-gray-400 hover:text-white rounded-lg transition-colors hover:bg-neutral-700/50"
+                              className="w-full h-[52px] flex justify-center items-center p-3 text-gray-400 hover:text-white rounded-lg transition-colors hover:bg-neutral-700/50"
                               aria-label="Upgrade Plan"
                           >
                              <Sparkle size={24} />
