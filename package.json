@@ -11,7 +11,7 @@
   "dependencies": {
     "react": "^19.2.0",
     "lucide-react": "^0.546.0",
-    "react-router-dom": "^7.9.4",
+    "react-router-dom": "^6.24.0",
     "react-dom": "^19.2.0",
     "zustand": "^5.0.8",
     "zod": "^3.23.8",

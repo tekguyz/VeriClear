@@ -1,6 +1,19 @@
-
 import { create } from 'zustand';
 import type { AuditRecord, ComplianceMetrics, AppView, TimelineEvent, AppMode } from '../types';
+
+interface ToastState {
+  id: number;
+  message: string;
+  type: 'success' | 'error';
+}
+
+interface ConfirmDialogState {
+  visible: boolean;
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
 
 interface AppState {
   isLiveMode: boolean;
@@ -11,19 +24,22 @@ interface AppState {
   auditRecords: AuditRecord[];
   complianceMetrics: ComplianceMetrics | null;
   currentView: AppView;
-  leftPanelCollapsed: boolean;
+  isLeftPanelOpen: boolean;
   rightPanelVisible: boolean;
-  leftPanelDrawerVisible: boolean; // For mobile drawer
   timelineEvents: TimelineEvent[];
   appMode: AppMode;
   isPricingModalVisible: boolean;
   isPaymentModalVisible: boolean;
+  theme: 'light' | 'dark';
+  toast: ToastState | null;
+  confirmDialog: ConfirmDialogState;
+  isConfettiVisible: boolean;
 
   // Actions
-  toggleLeftPanel: () => void;
+  toggleLeftPanelOpen: () => void;
+  setIsLeftPanelOpen: (isOpen: boolean) => void;
   toggleRightPanel: () => void;
   setRightPanelVisible: (visible: boolean) => void;
-  toggleLeftPanelDrawer: () => void;
   startLiveCall: () => void;
   stopLiveCall: () => void;
   addTranscriptionSegment: (segment: string) => void;
@@ -35,16 +51,36 @@ interface AppState {
   togglePricingModal: () => void;
   openPaymentModal: () => void;
   closePaymentModal: () => void;
+  setTheme: (theme: 'light' | 'dark') => void;
+  showToast: (message: string, type?: 'success' | 'error') => void;
+  hideToast: () => void;
+  showConfirmDialog: (title: string, message: string, onConfirm: () => void) => void;
+  showConfetti: () => void;
 }
 
-const getInitialSidebarState = (): boolean => {
-    if (typeof window === 'undefined') return false;
+const getInitialLeftPanelState = (): boolean => {
+    if (typeof window === 'undefined') return true;
     try {
-        const item = window.localStorage.getItem('vericlear-sidebar-collapsed');
-        return item ? JSON.parse(item) : false;
+        const item = window.localStorage.getItem('vericlear-left-panel-open');
+        if (item) {
+            return JSON.parse(item);
+        }
+        // Default to open on desktop, closed on mobile
+        return window.innerWidth >= 1024;
     } catch (error) {
-        console.warn('Error reading sidebar state from localStorage', error);
-        return false;
+        console.warn('Error reading left panel state from localStorage', error);
+        return window.innerWidth >= 1024;
+    }
+};
+
+const getInitialTheme = (): 'light' | 'dark' => {
+    if (typeof window === 'undefined') return 'dark';
+    try {
+        const item = window.localStorage.getItem('vericlear-theme');
+        return item === 'light' ? 'light' : 'dark';
+    } catch (error) {
+        console.warn('Error reading theme from localStorage', error);
+        return 'dark';
     }
 };
 
@@ -66,31 +102,31 @@ const mockComplianceMetrics: ComplianceMetrics = {
 const mockTimelineEvents: TimelineEvent[] = [
     {
         id: crypto.randomUUID(),
-        timestamp: new Date(Date.now() - 1 * 60000),
-        type: 'error',
-        title: 'Connection Lost',
-        details: 'Failed to connect to the live analysis service.',
+        timestamp: new Date(Date.now() - 1 * 60000), // 1 minute ago
+        type: 'system_message',
+        title: 'AI Suggestion: Upsell',
+        details: 'Agent could offer the "Pro-Care" warranty for the customer\'s product.',
     },
     {
         id: crypto.randomUUID(),
-        timestamp: new Date(Date.now() - 3 * 60000),
+        timestamp: new Date(Date.now() - 2 * 60000 - 15000), // 2 min 15 sec ago
         type: 'compliance_flag',
-        title: 'Disclosure Warning',
-        details: 'Agent nearly missed the secondary disclosure statement.',
+        title: 'Missed Disclosure',
+        details: 'The agent did not provide the required privacy disclosure statement before ending the call.',
     },
     {
         id: crypto.randomUUID(),
-        timestamp: new Date(Date.now() - 5 * 60000),
+        timestamp: new Date(Date.now() - 3 * 60000), // 3 minutes ago
         type: 'function_call',
         title: 'Function: knowledge_base_lookup',
-        details: 'Args: {"query":"return policy"}',
+        details: 'Args: {"query":"return policy for model X"}',
     },
     {
         id: crypto.randomUUID(),
-        timestamp: new Date(Date.now() - 10 * 60000),
+        timestamp: new Date(Date.now() - 4 * 60000), // 4 minutes ago
         type: 'system_message',
         title: 'Session Initialized',
-        details: 'Mock session data for demonstration.',
+        details: 'Analysis started for Support_Call_Oct23.wav.',
     },
 ];
 
@@ -102,34 +138,61 @@ const initialState = {
   currentAnalysis: null,
   auditRecords: [],
   complianceMetrics: null,
-  currentView: 'dashboard' as AppView,
-  leftPanelCollapsed: getInitialSidebarState(),
+  currentView: 'analytics' as AppView,
+  isLeftPanelOpen: getInitialLeftPanelState(),
   rightPanelVisible: false,
-  leftPanelDrawerVisible: false,
   timelineEvents: [],
   appMode: null as AppMode,
   isPricingModalVisible: false,
   isPaymentModalVisible: false,
+  theme: getInitialTheme(),
+  toast: null,
+  confirmDialog: {
+    visible: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    onCancel: () => {},
+  },
+  isConfettiVisible: false,
 };
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set, get) => ({
   ...initialState,
 
-  toggleLeftPanel: () => set((state) => {
-    const newCollapsedState = !state.leftPanelCollapsed;
+  setTheme: (theme) => {
+    try {
+        window.localStorage.setItem('vericlear-theme', theme);
+    } catch (error) {
+        console.warn('Error writing theme to localStorage', error);
+    }
+    set({ theme });
+  },
+
+  toggleLeftPanelOpen: () => set((state) => {
+    const newOpenState = !state.isLeftPanelOpen;
     if (typeof window !== 'undefined') {
         try {
-            window.localStorage.setItem('vericlear-sidebar-collapsed', JSON.stringify(newCollapsedState));
+            window.localStorage.setItem('vericlear-left-panel-open', JSON.stringify(newOpenState));
         } catch (error) {
-            console.warn('Error writing sidebar state to localStorage', error);
+            console.warn('Error writing left panel state to localStorage', error);
         }
     }
-    return { leftPanelCollapsed: newCollapsedState };
+    return { isLeftPanelOpen: newOpenState };
+  }),
+  setIsLeftPanelOpen: (isOpen) => set(() => {
+     if (typeof window !== 'undefined') {
+        try {
+            window.localStorage.setItem('vericlear-left-panel-open', JSON.stringify(isOpen));
+        } catch (error) {
+            console.warn('Error writing left panel state to localStorage', error);
+        }
+    }
+    return { isLeftPanelOpen: isOpen };
   }),
 
   toggleRightPanel: () => set((state) => ({ rightPanelVisible: !state.rightPanelVisible })),
   setRightPanelVisible: (visible: boolean) => set({ rightPanelVisible: visible }),
-  toggleLeftPanelDrawer: () => set((state) => ({ leftPanelDrawerVisible: !state.leftPanelDrawerVisible })),
   
   setAppMode: (mode) => {
     if (mode === 'demo') {
@@ -168,4 +231,30 @@ export const useAppStore = create<AppState>((set) => ({
   togglePricingModal: () => set((state) => ({ isPricingModalVisible: !state.isPricingModalVisible })),
   openPaymentModal: () => set({ isPaymentModalVisible: true, isPricingModalVisible: false }),
   closePaymentModal: () => set({ isPaymentModalVisible: false }),
+  
+  showToast: (message, type = 'success') => set({ toast: { id: Date.now(), message, type } }),
+  hideToast: () => set({ toast: null }),
+  
+  showConfirmDialog: (title, message, onConfirm) => {
+    set({
+      confirmDialog: {
+        visible: true,
+        title,
+        message,
+        onConfirm: () => {
+          onConfirm();
+          set({ confirmDialog: initialState.confirmDialog });
+        },
+        onCancel: () => {
+          set({ confirmDialog: initialState.confirmDialog });
+        },
+      },
+    });
+  },
+
+  showConfetti: () => {
+    set({ isConfettiVisible: true });
+    // Hide after the animation duration
+    setTimeout(() => set({ isConfettiVisible: false }), 4000);
+  },
 }));

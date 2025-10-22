@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { CheckSquare, Square, Edit3 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
@@ -10,11 +9,12 @@ interface ChecklistItem {
 }
 
 const DEFAULT_ITEMS: ChecklistItem[] = [
-  { id: '1', text: 'Verified customer identity', checked: true },
-  { id: '2', text: 'Provided required disclosures', checked: true },
-  { id: '3', text: 'Addressed primary concern', checked: false },
-  { id: '4', text: 'Confirmed resolution with customer', checked: false },
-  { id: '5', text: 'Maintained professional tone', checked: true },
+  { id: '1', text: 'Greeted customer professionally', checked: true },
+  { id: '2', text: 'Verified customer identity', checked: true },
+  { id: '3', text: 'Addressed primary concern', checked: true },
+  { id: '4', text: 'Provided required disclosures', checked: false },
+  { id: '5', text: 'Identified upsell opportunity', checked: false },
+  { id: '6', text: 'Maintained positive tone', checked: true },
 ];
 
 // For this MVP, we use a static key. In a real app, this would be dynamic
@@ -39,7 +39,9 @@ const AuditChecklist: React.FC = () => {
       if (storedItems) {
         setItems(JSON.parse(storedItems));
       } else {
-        setItems(DEFAULT_ITEMS.map(i => ({...i, checked: false})));
+        // For a real app, start with all items unchecked.
+        const freshItems = DEFAULT_ITEMS.map(i => ({...i, id: crypto.randomUUID(), checked: false }));
+        setItems(freshItems);
       }
     } catch (error) {
       console.error("Failed to load checklist from localStorage", error);
@@ -90,15 +92,21 @@ const AuditChecklist: React.FC = () => {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <h3 className="text-lg font-semibold text-text-primary">Live Audit Checklist</h3>
+      <h3 className="text-lg font-semibold text-text-primary">Live Review Checklist</h3>
       <ul className="space-y-3">
         {items.map(item => (
           <li key={item.id} className="flex items-center group">
-            <button onClick={() => handleToggleCheck(item.id)} className="mr-3 flex-shrink-0" disabled={isDemoMode}>
+            <button 
+                onClick={() => handleToggleCheck(item.id)} 
+                className="mr-3 flex-shrink-0" 
+                disabled={isDemoMode}
+                role="checkbox"
+                aria-checked={item.checked}
+            >
               {item.checked ? (
-                <CheckSquare className="text-accent-primary" size={24} />
+                <CheckSquare className="text-text-accent" size={24} />
               ) : (
-                <Square className="text-gray-500" size={24} />
+                <Square className="text-icon-primary" size={24} />
               )}
             </button>
             <div className="flex-1">
@@ -115,7 +123,7 @@ const AuditChecklist: React.FC = () => {
               ) : (
                 <span
                   className={`text-sm ${
-                    item.checked ? 'text-gray-500 line-through' : 'text-text-primary'
+                    item.checked ? 'text-text-secondary line-through' : 'text-text-primary'
                   }`}
                 >
                   {item.text}
@@ -124,8 +132,8 @@ const AuditChecklist: React.FC = () => {
             </div>
             <button 
                 onClick={() => startEditing(item.id)} 
-                className="ml-2 text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity hover:text-accent-primary disabled:opacity-0"
-                aria-label="Edit item"
+                className="ml-2 text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity hover:text-text-accent disabled:opacity-0"
+                aria-label={`Edit item: ${item.text}`}
                 disabled={isDemoMode}
             >
               <Edit3 size={16} />

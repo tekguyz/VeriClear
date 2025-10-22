@@ -1,5 +1,7 @@
 {
   "name": "VeriClear",
   "description": "An advanced compliance and audit dashboard featuring live call analysis, batch processing, and detailed audit trails, built with a modern three-panel layout.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "microphone"
+  ]
 }

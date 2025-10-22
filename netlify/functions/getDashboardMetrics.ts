@@ -1,45 +1,44 @@
-
-import type { DashboardMetrics } from '../../types';
+import type { AnalyticsMetrics } from '../../types';
 import { withApiProtection } from '../utils/api';
 
 const handler = async (): Promise<Response> => {
-    // In a real application, this data would be aggregated from the 'audit_records'
-    // and 'agent_performance' tables in your PostgreSQL database.
-    const metrics: DashboardMetrics = {
+    // In a real application, this data would be aggregated from a database.
+    // These metrics are now aligned with the new mock data in getAuditRecords.ts
+    const metrics: AnalyticsMetrics = {
         totalCalls: {
-            value: (1345).toLocaleString(),
-            label: 'Total Calls Analyzed',
-            change: 2.5,
+            value: '5',
+            label: 'Total Calls Reviewed',
+            change: 12.5, // Mock change
             changeType: 'increase',
         },
         complianceRate: {
-            value: '96.2%',
-            label: 'Compliance Rate',
-            change: -1.1,
+            value: '40%', // 2 passed out of 5 total records
+            label: 'Pass Rate',
+            change: -5.2, // Mock change
             changeType: 'decrease',
-            progress: 96.2,
+            progress: 40,
         },
         averageSentiment: {
-            value: 'Positive',
+            value: 'Neutral',
             label: 'Average Sentiment',
+            change: -2.1,
+            changeType: 'decrease',
+        },
+        agentPerformance: {
+            value: '6.8/10',
+            label: 'Agent Performance',
             change: 0.5,
             changeType: 'increase',
         },
-        agentPerformance: {
-            value: '8.7/10',
-            label: 'Agent Performance',
-            change: 0.0,
-            changeType: 'neutral',
-        },
         // Mock data for charts
         callVolume: [
-            { date: 'Mon', calls: Math.floor(Math.random() * 50) + 100 },
-            { date: 'Tue', calls: Math.floor(Math.random() * 50) + 120 },
-            { date: 'Wed', calls: Math.floor(Math.random() * 50) + 130 },
-            { date: 'Thu', calls: Math.floor(Math.random() * 50) + 150 },
-            { date: 'Fri', calls: Math.floor(Math.random() * 50) + 140 },
-            { date: 'Sat', calls: Math.floor(Math.random() * 50) + 80 },
-            { date: 'Sun', calls: Math.floor(Math.random() * 50) + 70 },
+            { date: 'Mon', calls: Math.floor(Math.random() * 2) + 1 },
+            { date: 'Tue', calls: Math.floor(Math.random() * 2) + 2 },
+            { date: 'Wed', calls: Math.floor(Math.random() * 2) + 1 },
+            { date: 'Thu', calls: Math.floor(Math.random() * 2) + 3 },
+            { date: 'Fri', calls: Math.floor(Math.random() * 2) + 2 },
+            { date: 'Sat', calls: Math.floor(Math.random() * 2) + 0 },
+            { date: 'Sun', calls: Math.floor(Math.random() * 2) + 1 },
         ],
         complianceTrends: [
             { date: 'Jan', passed: 1200, flagged: 150, failed: 30 },

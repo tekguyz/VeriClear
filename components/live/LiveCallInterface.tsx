@@ -1,6 +1,8 @@
 
+
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Mic, PhoneOff, Bot, User, AlertCircle } from 'lucide-react';
+import { Mic, PhoneOff, Bot, User, AlertCircle, Phone, Video, X, Info, CaseSensitive, Maximize, Minimize } from 'lucide-react';
 import { GoogleGenAI, FunctionDeclaration, Type, Modality, LiveServerMessage } from '@google/genai';
 import type { TranscriptSegment, TranscriptSpeaker } from '../../types';
 import { useAppStore } from '../../store/appStore';
@@ -19,6 +21,24 @@ function encode(bytes: Uint8Array) {
   }
   return btoa(binary);
 }
+
+// --- Reusable Hook for Outside Clicks ---
+const useOnClickOutside = (ref: React.RefObject<HTMLElement>, handler: (event: MouseEvent | TouchEvent) => void) => {
+  useEffect(() => {
+    const listener = (event: MouseEvent | TouchEvent) => {
+      if (!ref.current || ref.current.contains(event.target as Node)) {
+        return;
+      }
+      handler(event);
+    };
+    document.addEventListener('mousedown', listener);
+    document.addEventListener('touchstart', listener);
+    return () => {
+      document.removeEventListener('mousedown', listener);
+      document.removeEventListener('touchstart', listener);
+    };
+  }, [ref, handler]);
+};
 
 // --- Function Declarations for Agent Assistance ---
 const functionDeclarations: FunctionDeclaration[] = [
@@ -49,12 +69,97 @@ const functionDeclarations: FunctionDeclaration[] = [
     }
 ];
 
+// --- Call Launcher Modal for Mobile ---
+const CallLauncherModal: React.FC<{ onClose: () => void; onRecord: () => void; }> = ({ onClose, onRecord }) => {
+    const modalRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const modalElement = modalRef.current;
+        if (!modalElement) return;
+
+        const focusableElements = modalElement.querySelectorAll<HTMLElement>('button, a');
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        firstElement?.focus();
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') onClose();
+            if (event.key === 'Tab') {
+                if (event.shiftKey) {
+                    if (document.activeElement === firstElement) {
+                        lastElement.focus();
+                        event.preventDefault();
+                    }
+                } else {
+                    if (document.activeElement === lastElement) {
+                        firstElement.focus();
+                        event.preventDefault();
+                    }
+                }
+            }
+        };
+        const handleClickOutside = (event: MouseEvent) => {
+            if (modalRef.current && !modalRef.current.contains(event.target as Node)) onClose();
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [onClose]);
+
+    return (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+            <div ref={modalRef} className="relative w-full max-w-sm bg-panel-background border border-border-color rounded-2xl shadow-2xl p-6 text-center" role="dialog" aria-modal="true" aria-labelledby="launcher-title">
+                <h2 id="launcher-title" className="text-xl font-bold mb-2">Start a Session</h2>
+                <p className="text-sm text-text-secondary mb-6">First, start your conversation in another app, then begin recording here.</p>
+                <div className="space-y-3">
+                    <a href="tel:" className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-interactive-background-hover text-text-primary text-md font-semibold rounded-lg hover:bg-border-color transition-colors">
+                        <Phone size={20} />
+                        Start a Phone Call
+                    </a>
+                     <a href="zoommtg://" className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-interactive-background-hover text-text-primary text-md font-semibold rounded-lg hover:bg-border-color transition-colors">
+                        <Video size={20} />
+                        Open Zoom
+                    </a>
+                     <a href="gmeet://" className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-interactive-background-hover text-text-primary text-md font-semibold rounded-lg hover:bg-border-color transition-colors">
+                        <Video size={20} />
+                        Open Google Meet
+                    </a>
+                    <hr className="border-border-color" />
+                    <button onClick={onRecord} className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-accent-primary text-text-inverted text-md font-semibold rounded-lg hover:bg-accent-primary-hover transition-colors">
+                        <Mic size={20} />
+                        Just Record Audio
+                    </button>
+                </div>
+                <div className="mt-6 text-xs text-text-secondary bg-primary-background p-3 rounded-lg">
+                    <strong>Important:</strong> This app must remain open and in the foreground for the Co-Pilot to function correctly.
+                </div>
+                <button onClick={onClose} className="absolute top-4 right-4 text-text-secondary hover:text-text-primary" aria-label="Close">
+                    <X size={24} />
+                </button>
+            </div>
+        </div>
+    );
+};
+
+
 const LiveCallInterface: React.FC = () => {
     const [callState, setCallState] = useState<CallState>('idle');
     const [transcripts, setTranscripts] = useState<TranscriptSegment[]>([]);
     const [timer, setTimer] = useState(0);
     const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
+    const [isLauncherVisible, setLauncherVisible] = useState(false);
+    const [isHelpTooltipVisible, setHelpTooltipVisible] = useState(false);
+    const [textSize, setTextSize] = useState<'sm' | 'base' | 'lg'>('base');
+    const [isFullScreen, setIsFullScreen] = useState(false);
+    const isMobileRef = useRef(false);
+    
     const addTimelineEvent = useAppStore(state => state.addTimelineEvent);
+    // Fix: Corrected typo from `useAppAppStore` to `useAppStore`.
     const startStoreCall = useAppStore(state => state.startLiveCall);
     const appMode = useAppStore(state => state.appMode);
     const isDemoMode = appMode === 'demo';
@@ -64,6 +169,13 @@ const LiveCallInterface: React.FC = () => {
     const processorRef = useRef<ScriptProcessorNode | null>(null);
     const sessionPromiseRef = useRef<Promise<any> | null>(null);
     const transcriptEndRef = useRef<HTMLDivElement>(null);
+    const helpTooltipRef = useRef<HTMLDivElement>(null);
+    const transcriptContainerRef = useRef<HTMLDivElement>(null);
+    useOnClickOutside(helpTooltipRef, () => setHelpTooltipVisible(false));
+
+    useEffect(() => {
+        isMobileRef.current = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }, []);
 
     useEffect(() => {
         transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -140,6 +252,7 @@ const LiveCallInterface: React.FC = () => {
 
 
     const startCall = async () => {
+        setLauncherVisible(false); // Ensure launcher is closed
         if (isDemoMode) return;
         setCallState('connecting');
         setTranscripts([]);
@@ -227,70 +340,164 @@ const LiveCallInterface: React.FC = () => {
         }
     };
     
+    const handleStartCallClick = () => {
+        if (isMobileRef.current) {
+            setLauncherVisible(true);
+        } else {
+            startCall();
+        }
+    };
     
     const formatTime = (seconds: number) => new Date(seconds * 1000).toISOString().substr(14, 5);
     
     const getSpeakerIcon = (speaker: TranscriptSpeaker) => {
         switch (speaker) {
             case 'customer': return <User size={20} className="text-blue-400" />;
-            case 'agent': return <Bot size={20} className="text-blue-400" />;
-            default: return <AlertCircle size={20} className="text-gray-500" />;
+            case 'agent': return <Bot size={20} className="text-green-400" />;
+            default: return <AlertCircle size={20} className="text-icon-primary" />;
         }
     };
 
+    const cycleTextSize = () => {
+        setTextSize(currentSize => {
+            if (currentSize === 'sm') return 'base';
+            if (currentSize === 'base') return 'lg';
+            return 'sm';
+        });
+    };
+
+    const toggleFullScreen = () => {
+        const elem = transcriptContainerRef.current;
+        if (!elem) return;
+
+        if (!document.fullscreenElement) {
+            elem.requestFullscreen().catch(err => {
+                alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    };
+
+    useEffect(() => {
+        const handleFullScreenChange = () => {
+            setIsFullScreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleFullScreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullScreenChange);
+    }, []);
+
+    const textSizeClass = {
+        sm: 'text-sm',
+        base: 'text-base',
+        lg: 'text-lg',
+    }[textSize];
+
     return (
-        <div className="flex flex-col flex-1 bg-panel-background border border-border-color rounded-2xl p-6 h-full min-h-[500px]">
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${callState === 'active' ? 'bg-green-500' : 'bg-gray-500'}`}></div>
-                    <span className="font-mono text-lg">{formatTime(timer)}</span>
+        <>
+            {isLauncherVisible && <CallLauncherModal onClose={() => setLauncherVisible(false)} onRecord={startCall} />}
+            <div className="flex flex-col flex-1 bg-panel-background border border-border-color rounded-2xl h-full min-h-[500px] lg:p-6">
+                <div className="flex flex-col lg:flex-row flex-1 lg:gap-8 h-full">
+
+                    {/* Left Column: Controls & Visualizer (Desktop) */}
+                    <div className="lg:w-1/3 flex flex-col p-6 lg:p-0">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <div className={`w-3 h-3 rounded-full ${callState === 'active' ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}></div>
+                                <span className="font-mono text-lg">{formatTime(timer)}</span>
+                            </div>
+                             <div ref={helpTooltipRef} className="relative">
+                                <button
+                                    onClick={() => setHelpTooltipVisible(p => !p)}
+                                    className="text-icon-primary hover:text-text-primary"
+                                    aria-label="How to use Co-Pilot"
+                                >
+                                    <Info size={24} />
+                                </button>
+                                {isHelpTooltipVisible && (
+                                    <div className="absolute bottom-full right-0 mb-2 w-72 bg-primary-background border border-border-color rounded-xl shadow-2xl p-4 text-sm animate-fade-in z-10">
+                                        <h4 className="font-bold text-text-primary mb-2">How to use Co-Pilot</h4>
+                                        <ul className="list-disc list-inside space-y-2 text-text-secondary">
+                                            <li>First, start your call in another app (Phone, Zoom, etc.) on speakerphone.</li>
+                                            <li>Return here and tap "Start Call" to begin analysis.</li>
+                                            <li>For best results, this app must remain open and in the foreground.</li>
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="flex-1 flex flex-col items-center justify-center">
+                            <button
+                                onClick={callState === 'active' ? () => stopCall('user') : handleStartCallClick}
+                                disabled={isDemoMode || callState === 'connecting'}
+                                className={`relative flex items-center justify-center w-48 h-16 rounded-full font-semibold text-text-inverted transition-all duration-300 ${
+                                    callState === 'active' ? 'bg-red-500 hover:bg-red-600' : 'bg-accent-primary hover:bg-accent-primary-hover'
+                                } disabled:bg-gray-600 disabled:cursor-not-allowed`}
+                                title={isDemoMode ? "Co-Pilot is disabled in Demo Mode" : ""}
+                            >
+                                {callState === 'idle' && !isDemoMode && <div className="absolute inset-0 rounded-full bg-accent-primary animate-pulse"></div>}
+                                <div className="relative z-10 flex items-center text-lg">
+                                    {callState === 'active' ? <PhoneOff size={24} className="mr-2" /> : <Mic size={24} className="mr-2" />}
+                                    <span>{callState === 'active' ? 'End Call' : 'Start Call'}</span>
+                                </div>
+                            </button>
+                        </div>
+                        
+                        <div className="mt-4">
+                            <AudioVisualizer analyserNode={analyserNode} isActive={callState === 'active'} />
+                        </div>
+                    </div>
+
+                    {/* Right Column: Transcript (Desktop) / Main Content (Mobile) */}
+                    <div className="relative flex-1 flex flex-col min-h-0 p-6 pt-0 lg:p-0">
+                         <div ref={transcriptContainerRef} className="relative flex-1 bg-primary-background rounded-lg overflow-y-auto">
+                            <div className="absolute top-2 right-2 z-10 flex items-center gap-1 bg-panel-background/50 backdrop-blur-sm p-1 rounded-md">
+                                <button
+                                    onClick={cycleTextSize}
+                                    className="p-2 text-icon-primary hover:text-text-primary hover:bg-interactive-background-hover rounded-md transition-colors"
+                                    aria-label="Cycle text size"
+                                >
+                                    <CaseSensitive size={18} />
+                                </button>
+                                <button
+                                    onClick={toggleFullScreen}
+                                    className="p-2 text-icon-primary hover:text-text-primary hover:bg-interactive-background-hover rounded-md transition-colors"
+                                    aria-label={isFullScreen ? "Exit full screen" : "Enter full screen"}
+                                >
+                                    {isFullScreen ? <Minimize size={18} /> : <Maximize size={18} />}
+                                </button>
+                            </div>
+                            <div className="p-4 space-y-4">
+                                {transcripts.map((t) => (
+                                    <div key={t.id} className="flex items-start gap-3">
+                                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-panel-background flex items-center justify-center mt-1">
+                                        {getSpeakerIcon(t.speaker)}
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold capitalize text-sm text-text-secondary">{t.speaker}</p>
+                                            <p className={`text-text-primary transition-all duration-200 ${textSizeClass}`}>{t.text}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                                {callState === 'error' && (
+                                    <div className="text-center p-4">
+                                        <p className="text-red-400">An error occurred. Please check console and try again.</p>
+                                        <button 
+                                            onClick={() => window.location.hash = '/upload'}
+                                            className="mt-4 bg-interactive-background-hover text-text-primary py-2 px-4 rounded-lg font-semibold hover:bg-border-color"
+                                        >
+                                            Switch to Upload
+                                        </button>
+                                    </div>
+                                )}
+                                <div ref={transcriptEndRef} />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <button
-                    onClick={callState === 'active' ? () => stopCall('user') : startCall}
-                    disabled={isDemoMode || callState === 'connecting'}
-                    className={`relative flex items-center justify-center w-40 h-12 rounded-full font-semibold text-white transition-all duration-300 ${
-                        callState === 'active' ? 'bg-red-500 hover:bg-red-600' : 'bg-accent-primary hover:bg-blue-600'
-                    } disabled:bg-gray-600 disabled:cursor-not-allowed`}
-                    title={isDemoMode ? "Live call is disabled in Demo Mode" : ""}
-                >
-                    {callState === 'idle' && !isDemoMode && <div className="absolute inset-0 rounded-full bg-accent-primary animate-pulse"></div>}
-                    <div className="relative z-10 flex items-center">
-                        {callState === 'active' ? <PhoneOff size={24} className="mr-2" /> : <Mic size={24} className="mr-2" />}
-                        <span>{callState === 'active' ? 'End Call' : 'Start Call'}</span>
-                    </div>
-                </button>
             </div>
-
-            <div className="mb-4">
-                <AudioVisualizer analyserNode={analyserNode} isActive={callState === 'active'} />
-            </div>
-
-            <div className="flex-1 bg-primary-background/50 rounded-lg p-4 overflow-y-auto space-y-4">
-                {transcripts.map((t) => (
-                    <div key={t.id} className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center mt-1">
-                           {getSpeakerIcon(t.speaker)}
-                        </div>
-                        <div>
-                            <p className="font-semibold capitalize text-sm">{t.speaker}</p>
-                            <p className="text-gray-300">{t.text}</p>
-                        </div>
-                    </div>
-                ))}
-                 {callState === 'error' && (
-                    <div className="text-center p-4">
-                        <p className="text-red-400">An error occurred. Please check console and try again.</p>
-                        <button 
-                            onClick={() => window.location.hash = '/batch-analysis'}
-                            className="mt-4 bg-gray-700 text-white py-2 px-4 rounded-lg font-semibold hover:bg-gray-600"
-                        >
-                            Switch to Batch Analysis
-                        </button>
-                    </div>
-                )}
-                <div ref={transcriptEndRef} />
-            </div>
-        </div>
+        </>
     );
 };
 

@@ -140,13 +140,13 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onProgressUpdate, onAnalysi
         switch (status) {
             case 'analyzing':
             case 'uploading':
-                return <Loader2 className="animate-spin text-accent-primary" size={20} />;
+                return <Loader2 className="animate-spin text-text-accent" size={20} />;
             case 'completed':
                 return <CheckCircle className="text-green-500" size={20} />;
             case 'failed':
                 return <AlertTriangle className="text-red-500" size={20} />;
             default:
-                return <FileText className="text-gray-400" size={20} />;
+                return <FileText className="text-icon-primary" size={20} />;
         }
     };
 
@@ -157,7 +157,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onProgressUpdate, onAnalysi
                 onDragOver={handleDragOver}
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
-                className={`relative w-full p-8 border-2 border-dashed ${isDragging ? 'border-accent-primary' : 'border-neutral-600'} rounded-2xl text-center transition-colors ${isDemoMode ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+                className={`relative w-full p-8 border-2 border-dashed ${isDragging ? 'border-accent-primary' : 'border-border-color'} rounded-2xl text-center transition-colors ${isDemoMode ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
             >
                 <input
                     type="file"
@@ -170,10 +170,10 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onProgressUpdate, onAnalysi
                 />
                 <label htmlFor="file-upload" className={isDemoMode ? 'cursor-not-allowed' : 'cursor-pointer'}>
                     <div className="flex justify-center mb-4">
-                        <UploadCloud className="text-gray-500" size={48} />
+                        <UploadCloud className="text-icon-primary" size={48} />
                     </div>
                     <p className="font-semibold text-text-primary">Click to upload or drag and drop</p>
-                    <p className="text-sm text-gray-400">MP3, WAV, M4A, TXT, PDF (Max 15MB)</p>
+                    <p className="text-sm text-text-secondary">MP3, WAV, M4A, TXT, PDF (Max 15MB)</p>
                 </label>
                  {isDemoMode && <div className="absolute inset-0 bg-panel-background/70 rounded-2xl flex items-center justify-center"><span className="px-4 py-2 bg-black/70 text-white rounded-md font-semibold">Disabled in Demo Mode</span></div>}
             </div>
@@ -183,20 +183,20 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onProgressUpdate, onAnalysi
                     <h3 className="text-lg font-semibold mb-3">File Queue</h3>
                     <ul className="space-y-3 max-h-60 overflow-y-auto pr-2">
                         {files.map(f => (
-                            <li key={f.file.name} className="flex items-center justify-between bg-gray-800/50 p-3 rounded-lg">
+                            <li key={f.file.name} className="flex items-center justify-between bg-subtle-background p-3 rounded-lg">
                                 <div className="flex items-center overflow-hidden">
                                     <div className="mr-3 flex-shrink-0">{renderFileStatusIcon(f.status)}</div>
                                     <div className="flex-grow overflow-hidden">
                                         <p className="text-sm font-medium truncate" title={f.file.name}>{f.file.name}</p>
                                          {(f.status === 'uploading') && (
-                                            <div className="w-full bg-gray-700 rounded-full h-1.5 mt-1">
+                                            <div className="w-full bg-border-color rounded-full h-1.5 mt-1">
                                                 <div className="bg-accent-primary h-1.5 rounded-full" style={{ width: `${f.progress}%` }}></div>
                                             </div>
                                         )}
                                         {f.status === 'failed' && <p className="text-xs text-red-400">{f.error}</p>}
                                     </div>
                                 </div>
-                                <button onClick={() => removeFile(f.file.name)} className="text-gray-500 hover:text-red-500 ml-2 flex-shrink-0">
+                                <button onClick={() => removeFile(f.file.name)} className="text-text-secondary hover:text-red-500 ml-2 flex-shrink-0">
                                     <X size={16} />
                                 </button>
                             </li>
@@ -205,7 +205,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onProgressUpdate, onAnalysi
                      <button 
                         onClick={startAnalysis} 
                         disabled={isDemoMode || files.length === 0 || files.some(f => f.status === 'uploading' || f.status === 'analyzing')}
-                        className="mt-6 w-full bg-accent-primary text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 flex items-center justify-center disabled:bg-gray-600 disabled:cursor-not-allowed">
+                        className="mt-6 w-full bg-accent-primary text-text-inverted py-2.5 rounded-lg font-semibold hover:bg-accent-primary-hover flex items-center justify-center disabled:bg-gray-600 disabled:cursor-not-allowed">
                         Start Analysis
                     </button>
                 </div>

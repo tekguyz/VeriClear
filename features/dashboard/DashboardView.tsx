@@ -1,9 +1,11 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Minus, CheckCircle, Smile, UserCheck, BarChart, LineChart } from 'lucide-react';
-import type { DashboardMetrics, MetricCardData } from '../../types';
+import type { AnalyticsMetrics, MetricCardData } from '../../types';
+import InfoPopover from '../../components/common/InfoPopover';
 
-const MetricCard: React.FC<{ data: MetricCardData; icon: React.ElementType }> = ({ data, icon: Icon }) => {
+const MetricCard: React.FC<{ data: MetricCardData; icon: React.ElementType, children?: React.ReactNode }> = ({ data, icon: Icon, children }) => {
   const TrendIcon = data.changeType === 'increase' ? TrendingUp : data.changeType === 'decrease' ? TrendingDown : Minus;
   const trendColor = data.changeType === 'increase' ? 'text-green-400' : data.changeType === 'decrease' ? 'text-red-400' : 'text-gray-400';
 
@@ -11,7 +13,10 @@ const MetricCard: React.FC<{ data: MetricCardData; icon: React.ElementType }> = 
     <div className="bg-panel-background border border-border-color rounded-2xl p-6 relative flex flex-col">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-gray-400 text-sm mb-1">{data.label}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-gray-400 text-sm mb-1">{data.label}</p>
+            {children}
+          </div>
           <p className="text-3xl font-bold text-text-primary">{data.value}</p>
         </div>
         {data.progress !== undefined ? (
@@ -58,8 +63,8 @@ const ChartPlaceholder: React.FC<{ title: string; icon: React.ElementType }> = (
     </div>
 );
 
-const DashboardView: React.FC = () => {
-    const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+const AnalyticsView: React.FC = () => {
+    const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -70,7 +75,7 @@ const DashboardView: React.FC = () => {
                 if (!response.ok) {
                     throw new Error(`Failed to fetch dashboard metrics. Status: ${response.status}`);
                 }
-                const data: DashboardMetrics = await response.json();
+                const data: AnalyticsMetrics = await response.json();
                 setMetrics(data);
                 setError(null);
             } catch (err) {
@@ -106,17 +111,19 @@ const DashboardView: React.FC = () => {
     <div className="animate-fade-in">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
           <MetricCard data={metrics.totalCalls} icon={BarChart} />
-          <MetricCard data={metrics.complianceRate} icon={CheckCircle} />
+          <MetricCard data={metrics.complianceRate} icon={CheckCircle}>
+            <InfoPopover content="The percentage of reviews that passed all quality and script checks." />
+          </MetricCard>
           <MetricCard data={metrics.averageSentiment} icon={Smile} />
           <MetricCard data={metrics.agentPerformance} icon={UserCheck} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <ChartPlaceholder title="Call Volume Over Time" icon={LineChart} />
-          <ChartPlaceholder title="Compliance Trends" icon={BarChart} />
+          <ChartPlaceholder title="Pass Rate Trends" icon={BarChart} />
       </div>
     </div>
   );
 };
 
-export default DashboardView;
+export default AnalyticsView;

@@ -4,7 +4,7 @@ import StaticPageLayout from '../../components/layout/StaticPageLayout';
 const AIEthicsView: React.FC = () => {
   return (
     <StaticPageLayout title="AI Ethics Statement">
-      <p>At TEKGUYZ, we recognize that the power of Artificial Intelligence comes with a profound responsibility. We are committed to developing and deploying AI solutions that are not only innovative but also ethical, transparent, and beneficial to society. Our commitment to responsible AI is built on the following core principles:</p>
+      <p>At VeriClear, we recognize that the power of Artificial Intelligence comes with a profound responsibility. We are committed to developing and deploying AI solutions that are not only innovative but also ethical, transparent, and beneficial to society. Our commitment to responsible AI is built on the following core principles:</p>
       
       <ul>
         <li>

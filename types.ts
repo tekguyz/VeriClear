@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export interface AuditRecord {
@@ -16,7 +17,7 @@ export interface ComplianceMetrics {
   sentimentAnalysis: number;
 }
 
-export type AppView = 'dashboard' | 'live' | 'batch' | 'settings';
+export type AppView = 'analytics' | 'co-pilot' | 'batch' | 'settings';
 export type AppMode = 'demo' | 'app' | null;
 
 
@@ -48,6 +49,7 @@ export interface BatchAuditRecord {
   createdAt: string; // ISO string
   status: AnalysisStatus;
   complianceFlag: ComplianceStatus;
+  source: 'upload' | 'co-pilot';
   problemSummary?: string;
   solutionSteps?: string[];
   callSentiment?: CallSentiment;
@@ -82,7 +84,7 @@ export interface TimelineEvent {
   details: string;
 }
 
-// Types for Analytics Dashboard
+// Types for Analytics
 export interface MetricCardData {
   value: string;
   label: string;
@@ -96,7 +98,7 @@ export interface ChartDataPoint {
   [key: string]: number | string;
 }
 
-export interface DashboardMetrics {
+export interface AnalyticsMetrics {
   totalCalls: MetricCardData;
   complianceRate: MetricCardData;
   averageSentiment: MetricCardData;

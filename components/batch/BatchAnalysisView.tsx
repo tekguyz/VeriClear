@@ -1,6 +1,6 @@
+
 import React, { useState, useCallback } from 'react';
 import FileUploader from './FileUploader';
-import FileManager from '../fileManager/FileManager';
 import ProcessStatusStepper from './ProcessStatusStepper';
 
 type StepperStatus = 'idle' | 'in-progress' | 'success' | 'error';
@@ -8,12 +8,12 @@ type StepperStatus = 'idle' | 'in-progress' | 'success' | 'error';
 const BatchAnalysisView: React.FC = () => {
     const [currentStep, setCurrentStep] = useState(0);
     const [stepperStatus, setStepperStatus] = useState<StepperStatus>('idle');
-    const [refreshKey, setRefreshKey] = useState(0);
 
     const handleAnalysisComplete = useCallback(() => {
         setCurrentStep(4);
         setStepperStatus('success');
-        setRefreshKey(k => k + 1);
+        // In a real app, you might navigate to the reviews page
+        // or show a success notification.
         setTimeout(() => {
             setCurrentStep(0);
             setStepperStatus('idle');
@@ -30,21 +30,16 @@ const BatchAnalysisView: React.FC = () => {
     }, []);
 
     return (
-        <div className="animate-fade-in">
-            <p className="text-gray-400 mb-8">Upload audio recordings or call transcripts for asynchronous processing and review audit records.</p>
+        <div className="animate-fade-in max-w-xl mx-auto">
+            <p className="text-gray-400 mb-8 text-center">Let our AI analyze your call recordings. Upload audio or transcript files, and we'll generate a detailed review, flagging compliance issues and scoring agent performance.</p>
             
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                <div className="lg:col-span-2 flex flex-col gap-8">
-                   <FileUploader 
-                     onAnalysisComplete={handleAnalysisComplete} 
-                     onProgressUpdate={handleProgressUpdate}
-                     onAnalysisError={handleAnalysisError}
-                   />
-                   <ProcessStatusStepper currentStep={currentStep} status={stepperStatus} />
-                </div>
-                <div className="lg:col-span-3">
-                    <FileManager key={refreshKey} />
-                </div>
+            <div className="flex flex-col gap-8">
+               <FileUploader 
+                 onAnalysisComplete={handleAnalysisComplete} 
+                 onProgressUpdate={handleProgressUpdate}
+                 onAnalysisError={handleAnalysisError}
+               />
+               <ProcessStatusStepper currentStep={currentStep} status={stepperStatus} />
             </div>
         </div>
     );

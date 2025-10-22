@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAppStore } from '../../store/appStore';
 import { FunctionSquare, AlertTriangle, XCircle, MessageSquare } from 'lucide-react';
@@ -7,12 +6,15 @@ import type { TimelineEvent, TimelineEventType } from '../../types';
 
 const MAX_NOTE_LENGTH = 5000;
 const LOCAL_STORAGE_KEY = 'vericlear-notes';
-const DEMO_NOTE = `This is a note from a previous session. The agent, Alex, did a great job de-escalating the billing issue by proactively offering a loyalty discount. Follow up with marketing to see if this discount can be more widely advertised to at-risk customers.
+const DEMO_NOTE = `Review of Support_Call_Oct23.wav:
 
-Key points:
-- Customer was unaware their promotional period had ended.
-- Agent successfully applied a 15% loyalty discount.
-- Customer sentiment shifted from negative to positive.
+The agent, Alex, successfully resolved the customer's primary billing issue by proactively offering a loyalty discount. Customer sentiment was positive at the end of the call.
+
+However, the AI flagged two key misses that require follow-up coaching:
+1.  **Missed Disclosure:** The required privacy disclosure was not provided (see timeline event at 02:15). This is a critical compliance failure.
+2.  **Missed Upsell:** A clear opportunity to upsell the 'Pro-Care' warranty was missed (see AI suggestion at 01:00).
+
+Action Item: Schedule a coaching session with Alex to review these two points.
 `;
 
 
@@ -31,16 +33,35 @@ function useDebounce<T>(value: T, delay: number): T {
 const getEventAppearance = (type: TimelineEventType) => {
     switch (type) {
         case 'function_call':
-            return { icon: FunctionSquare, color: 'text-accent-primary' };
+            return { icon: FunctionSquare, color: 'text-text-accent' };
         case 'compliance_flag':
             return { icon: AlertTriangle, color: 'text-yellow-500' };
         case 'error':
             return { icon: XCircle, color: 'text-red-500' };
         case 'system_message':
         default:
-            return { icon: MessageSquare, color: 'text-gray-400' };
+            return { icon: MessageSquare, color: 'text-icon-primary' };
     }
 };
+
+const DemoNoteDisplay: React.FC = () => (
+    <div className="w-full h-40 p-3 bg-input-background rounded-2xl text-sm text-text-primary overflow-y-auto">
+        {DEMO_NOTE.split('\n').map((line, i) => {
+            // Split line by the bold markdown syntax
+            const parts = line.split(/(\*\*.*?\*\*)/g);
+            return (
+                <p key={i} className="mb-2 last:mb-0">
+                    {parts.map((part, j) => {
+                        if (part.startsWith('**') && part.endsWith('**')) {
+                            return <strong key={j} className="text-text-primary font-semibold">{part.slice(2, -2)}</strong>;
+                        }
+                        return part;
+                    })}
+                </p>
+            );
+        })}
+    </div>
+);
 
 const NotesTimeline: React.FC = () => {
     const [note, setNote] = useState('');
@@ -92,14 +113,17 @@ const NotesTimeline: React.FC = () => {
             {/* Notes Section */}
             <div className="relative mb-6">
                 <h3 className="text-lg font-semibold text-text-primary mb-2">Notes</h3>
-                <textarea
-                    value={note}
-                    onChange={handleNoteChange}
-                    readOnly={isDemoMode}
-                    className="w-full h-40 p-3 bg-gray-800/50 rounded-2xl text-sm text-gray-300 placeholder-gray-500 focus:ring-1 focus:ring-accent-primary focus:outline-none resize-none disabled:opacity-70"
-                    placeholder={isDemoMode ? "Notes are read-only in demo mode." : "Add notes here... auto-saves after 3 seconds."}
-                />
-                <div className="absolute bottom-3 right-3 text-xs text-gray-500">
+                {isDemoMode ? (
+                    <DemoNoteDisplay />
+                ) : (
+                    <textarea
+                        value={note}
+                        onChange={handleNoteChange}
+                        className="w-full h-40 p-3 bg-input-background rounded-2xl text-sm text-text-primary placeholder:text-text-placeholder focus:ring-1 focus:ring-accent-primary focus:outline-none resize-y disabled:opacity-70"
+                        placeholder="Add notes here... auto-saves after 3 seconds."
+                    />
+                )}
+                <div className="absolute bottom-3 right-3 text-xs text-text-secondary">
                     {note.length} / {MAX_NOTE_LENGTH}
                 </div>
             </div>
@@ -119,15 +143,15 @@ const NotesTimeline: React.FC = () => {
                                     <div className="flex-1">
                                         <div className="flex justify-between items-baseline">
                                             <p className={`font-semibold text-sm ${color}`}>{event.title}</p>
-                                            <p className="text-xs text-gray-500">{format(event.timestamp, 'HH:mm:ss')}</p>
+                                            <p className="text-xs text-text-secondary">{format(event.timestamp, 'HH:mm:ss')}</p>
                                         </div>
-                                        <p className="text-xs text-gray-400">{event.details}</p>
+                                        <p className="text-xs text-text-secondary">{event.details}</p>
                                     </div>
                                 </div>
                             )
                         })
                     ) : (
-                         <p className="text-sm text-gray-500 text-center py-4">No events recorded yet.</p>
+                         <p className="text-sm text-text-secondary text-center py-4">No events recorded yet.</p>
                     )}
                 </div>
             </div>

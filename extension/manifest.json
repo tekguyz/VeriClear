@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "VeriClear Co-Pilot Extension",
+  "version": "1.0",
+  "description": "Analyze browser-based calls and meetings with VeriClear's AI Co-Pilot.",
+  "permissions": [
+    "tabCapture"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.svg",
+      "48": "icons/icon48.svg",
+      "128": "icons/icon128.svg"
+    }
+  },
+  "background": {
+    "service_worker": "dist/background.js",
+    "type": "module"
+  },
+  "icons": {
+    "16": "icons/icon16.svg",
+    "48": "icons/icon48.svg",
+    "128": "icons/icon128.svg"
+  }
+}

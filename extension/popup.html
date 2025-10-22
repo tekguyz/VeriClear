@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeriClear Extension</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --color-primary-background: #e4e4e7;
+        --color-panel-background: #ffffff;
+        --color-interactive-background-hover: #f4f4f5;
+        --color-accent-background: #4285F4;
+        --color-accent-background-hover: #3367D6;
+        --color-text-primary: #18181b;
+        --color-text-secondary: #52525b;
+        --color-text-accent: #4285F4;
+        --color-text-inverted: #ffffff;
+        --color-border-color: #d4d4d8;
+      }
+      html.dark {
+        --color-primary-background: #0a0a0a;
+        --color-panel-background: #171717;
+        --color-interactive-background-hover: #262626;
+        --color-accent-background: #4285F4;
+        --color-accent-background-hover: #3367D6;
+        --color-text-primary: #fafafa;
+        --color-text-secondary: #a1a1aa;
+        --color-text-accent: #4285F4;
+        --color-text-inverted: #0a0a0a;
+        --color-border-color: #262626;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--color-panel-background);
+        color: var(--color-text-primary);
+        width: 320px; /* Fixed width for the popup */
+        height: 480px; /* Fixed height for the popup */
+      }
+    </style>
+     <script>
+      (async function() {
+        try {
+          // In extensions, we can't use localStorage directly for this.
+          // A better approach is to detect system preference.
+          if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {
+          document.documentElement.classList.add('dark'); // Fallback
+        }
+      })();
+       tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Inter', 'sans-serif'] },
+            colors: {
+              'primary-background': 'var(--color-primary-background)',
+              'panel-background': 'var(--color-panel-background)',
+              'interactive-background-hover': 'var(--color-interactive-background-hover)',
+              'accent-primary': 'var(--color-accent-background)',
+              'accent-primary-hover': 'var(--color-accent-background-hover)',
+              'text-primary': 'var(--color-text-primary)',
+              'text-secondary': 'var(--color-text-secondary)',
+              'text-accent': 'var(--color-text-accent)',
+              'text-inverted': 'var(--color-text-inverted)',
+              'border-color': 'var(--color-border-color)',
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="dist/popup.js"></script>
+</body>
+</html>

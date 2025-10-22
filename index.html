@@ -9,11 +9,86 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+      :root {
+        /* Backgrounds */
+        --color-primary-background: #e4e4e7; /* zinc-200 */
+        --color-panel-background: #ffffff;
+        --color-interactive-background-hover: #f4f4f5; /* zinc-100 */
+        --color-input-background: #e4e4e7; /* zinc-200 */
+        --color-accent-background: #4285F4;
+        --color-accent-background-hover: #3367D6;
+        --color-subtle-background: #f4f4f5; /* zinc-100 */
+
+        /* Text */
+        --color-text-primary: #18181b; /* zinc-900 */
+        --color-text-secondary: #52525b; /* zinc-600 */
+        --color-text-accent: #4285F4;
+        --color-text-inverted: #ffffff;
+        --color-text-placeholder: #71717a; /* zinc-500 */
+        
+        /* Borders */
+        --color-border-color: #d4d4d8; /* zinc-300 */
+
+        /* Icons */
+        --color-icon-primary: #52525b; /* zinc-600 */
+        
+        /* Notices */
+        --color-notice-background: #fef3c7; /* yellow-100 */
+        --color-notice-text: #92400e; /* yellow-800 */
+      }
+
+      html.dark {
+        /* Backgrounds */
+        --color-primary-background: #0a0a0a;
+        --color-panel-background: #171717;
+        --color-interactive-background-hover: #262626;
+        --color-input-background: #202020;
+        --color-accent-background: #4285F4;
+        --color-accent-background-hover: #3367D6;
+        --color-subtle-background: #1c1c1c;
+
+        /* Text */
+        --color-text-primary: #fafafa;
+        --color-text-secondary: #a1a1aa; /* zinc-400 */
+        --color-text-accent: #4285F4;
+        --color-text-inverted: #0a0a0a;
+        --color-text-placeholder: #71717a; /* zinc-500 */
+        
+        /* Borders */
+        --color-border-color: #262626;
+
+        /* Icons */
+        --color-icon-primary: #a1a1aa; /* zinc-400 */
+        
+        /* Notices */
+        --color-notice-background: rgba(234, 179, 8, 0.2); /* yellow-500/20 */
+        --color-notice-text: #fde047; /* yellow-300 */
+      }
+      
+      /* Browser Autofill Styles */
+      input:-webkit-autofill,
+      input:-webkit-autofill:hover, 
+      input:-webkit-autofill:focus, 
+      input:-webkit-autofill:active {
+          -webkit-box-shadow: 0 0 0 30px var(--color-input-background) inset !important;
+          -webkit-text-fill-color: var(--color-text-primary) !important;
+          caret-color: var(--color-text-primary);
+      }
+
       body {
-        background-image: radial-gradient(#262626 1px, transparent 0);
+        background-color: var(--color-primary-background);
+        color: var(--color-text-primary);
         background-size: 20px 20px;
         background-attachment: fixed;
       }
+
+      html:not(.dark) body {
+        background-image: radial-gradient(#d4d4d8 1px, transparent 0);
+      }
+      html.dark body {
+        background-image: radial-gradient(#262626 1px, transparent 0);
+      }
+
       @keyframes glow {
         0% { box-shadow: 0 0 5px rgba(66, 133, 244, 0); }
         50% { box-shadow: 0 0 20px 5px rgba(66, 133, 244, 0.4); }
@@ -43,20 +118,57 @@
       .animate-fade-in {
         animation: fadeIn 0.5s ease-in-out;
       }
+      @keyframes slideInUp {
+        from { transform: translateY(2rem); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      .animate-slide-in-up {
+        animation: slideInUp 0.5s ease-out;
+      }
     </style>
     <script>
+      // IIFE to set the theme class on the <html> element before the page loads to prevent FOUC
+      (function() {
+        try {
+          const theme = localStorage.getItem('vericlear-theme');
+          // Default to dark theme if no setting is found
+          if (theme === 'dark' || !theme) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {
+          console.warn('Could not set initial theme from localStorage', e);
+          document.documentElement.classList.add('dark'); // Fallback to dark
+        }
+      })();
+
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
               sans: ['Inter', 'sans-serif'],
             },
             colors: {
-              'primary-background': '#0a0a0a',
-              'accent-primary': '#4285F4',
-              'text-primary': '#fafafa',
-              'panel-background': '#171717',
-              'border-color': '#262626',
+              'primary-background': 'var(--color-primary-background)',
+              'panel-background': 'var(--color-panel-background)',
+              'interactive-background-hover': 'var(--color-interactive-background-hover)',
+              'input-background': 'var(--color-input-background)',
+              'subtle-background': 'var(--color-subtle-background)',
+
+              'accent-primary': 'var(--color-accent-background)',
+              'accent-primary-hover': 'var(--color-accent-background-hover)',
+              
+              'text-primary': 'var(--color-text-primary)',
+              'text-secondary': 'var(--color-text-secondary)',
+              'text-accent': 'var(--color-text-accent)',
+              'text-inverted': 'var(--color-text-inverted)',
+              'text-placeholder': 'var(--color-text-placeholder)',
+              
+              'border-color': 'var(--color-border-color)',
+              'icon-primary': 'var(--color-icon-primary)',
+
+              'notice-background': 'var(--color-notice-background)',
+              'notice-text': 'var(--color-notice-text)',
             }
           }
         }
@@ -68,7 +180,7 @@
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "lucide-react": "https://aistudiocdn.com/lucide-react@^0.546.0",
-    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.4",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^6.24.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "zustand": "https://aistudiocdn.com/zustand@^5.0.8",
     "zod": "https://aistudiocdn.com/zod@^3.23.8",
@@ -79,6 +191,21 @@
 </script>
 </head>
   <body class="bg-primary-background text-text-primary">
+    <!-- Netlify Form Detection: This is a hidden form that Netlify's bots will detect at build time. -->
+    <form name="lead-capture" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="lead-capture" />
+      <input type="email" name="email" />
+    </form>
+    
+    <!-- Hidden form for the Feedback feature -->
+    <form name="feedback-form" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="hidden" name="form-name" value="feedback-form" />
+      <input type="number" name="rating" />
+      <input type="text" name="feedback-type" />
+      <textarea name="comments"></textarea>
+      <input type="email" name="email" />
+    </form>
+    
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
