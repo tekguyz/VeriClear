@@ -77,7 +77,6 @@ const handler = async (req: Request) => {
         config: {
             systemInstruction: systemInstruction,
             tools: [{ functionDeclarations: [logAuditRecordFunctionDeclaration] }],
-            toolConfig: { functionCallingConfig: { mode: 'ANY' } }
         },
     });
     
