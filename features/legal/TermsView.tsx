@@ -9,7 +9,7 @@ const TermsView: React.FC = () => {
         Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the VeriClear application (the "Service") operated by us.
         Your access to and use of the Service is conditioned on your acceptance of and compliance with these Terms. These Terms apply to all visitors, users, and others who access or use the Service.
       </p>
-      <ol>
+      <ul>
         <li>
           <h3>Accounts</h3>
           <p>
@@ -28,7 +28,7 @@ const TermsView: React.FC = () => {
             We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.
           </p>
         </li>
-      </ol>
+      </ul>
     </StaticPageLayout>
   );
 };

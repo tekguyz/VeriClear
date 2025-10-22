@@ -8,7 +8,7 @@ const PrivacyView: React.FC = () => {
       <p>
         This page informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service and the choices you have associated with that data.
       </p>
-      <ol>
+      <ul>
         <li>
           <h3>Information Collection and Use</h3>
           <p>
@@ -27,7 +27,7 @@ const PrivacyView: React.FC = () => {
             The security of your data is important to us, but remember that no method of transmission over the Internet or method of electronic storage is 100% secure. While we strive to use commercially acceptable means to protect your Personal Data, we cannot guarantee its absolute security.
           </p>
         </li>
-      </ol>
+      </ul>
     </StaticPageLayout>
   );
 };
