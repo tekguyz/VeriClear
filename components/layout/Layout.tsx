@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { PanelRightOpen, Menu, Info, ArrowLeft, ChevronsLeft } from 'lucide-react';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
 import Footer from './Footer';
 import { useAppStore } from '../../store/appStore';
+import OnboardingModal from '../onboarding/OnboardingModal';
 
 const DemoBanner: React.FC = () => {
     const setAppMode = useAppStore(state => state.setAppMode);
@@ -30,12 +31,23 @@ const Layout: React.FC = () => {
   const leftPanelDrawerVisible = useAppStore((state) => state.leftPanelDrawerVisible);
   const toggleLeftPanelDrawer = useAppStore((state) => state.toggleLeftPanelDrawer);
   const appMode = useAppStore((state) => state.appMode);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const isDemoMode = appMode === 'demo';
 
-  React.useEffect(() => {
-    // On initial load, if the screen is small, hide the right panel drawer by default.
-    // This effect runs only once and does not listen for resizes, giving the user full control.
+  useEffect(() => {
+    const hasSeenOnboarding = sessionStorage.getItem('hasSeenOnboarding');
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  const handleCloseOnboarding = () => {
+    sessionStorage.setItem('hasSeenOnboarding', 'true');
+    setShowOnboarding(false);
+  };
+
+  useEffect(() => {
     if (window.innerWidth < 1280) {
       setRightPanelVisible(false);
     }
@@ -44,6 +56,8 @@ const Layout: React.FC = () => {
 
   return (
     <div className="flex h-screen w-full bg-primary-background text-text-primary font-sans">
+      {showOnboarding && <OnboardingModal onClose={handleCloseOnboarding} />}
+      
       {/* Static Left Panel for md screens and up */}
       <div className="hidden md:flex">
         <LeftPanel />

@@ -7,8 +7,7 @@ const LiveCallView: React.FC = () => {
             <div className="text-center mb-8">
                 <h1 className="text-3xl font-bold text-text-primary mb-2">Live Call Analysis</h1>
                 <p className="text-gray-400 max-w-2xl mx-auto">
-                    Start the session to begin real-time transcription and AI-powered agent assistance.
-                    Compliance events and function calls will appear in the transcript.
+                    This is an AI co-pilot for your human agents. Start a session to monitor a live call. The system will provide real-time transcription, automatically look up information, flag compliance issues, and suggest next steps to help your agent resolve issues faster and more accurately.
                 </p>
             </div>
             <LiveCallInterface />
