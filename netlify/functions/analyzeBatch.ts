@@ -69,7 +69,21 @@ const handler = async (req: Request) => {
         return new Response('Method Not Allowed', { status: 405 });
     }
     
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = process.env.API_KEY;
+
+    if (!apiKey) {
+        console.error("CRITICAL: API_KEY environment variable is not set.");
+        return new Response(JSON.stringify({ success: false, error: 'Server configuration error: Missing API key.' }), {
+            headers: { 'Content-Type': 'application/json' },
+            status: 500,
+        });
+    }
+    
+    // Diagnostic logging to help debug authentication issues.
+    console.log(`Verifying API Key. Length: ${apiKey.length}. Starts with: "${apiKey.substring(0, 5)}", Ends with: "${apiKey.substring(apiKey.length - 5)}"`);
+
+
+    const ai = new GoogleGenAI({ apiKey });
 
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
