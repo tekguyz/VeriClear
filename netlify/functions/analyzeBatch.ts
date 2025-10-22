@@ -3,6 +3,7 @@ import { GoogleGenAI, FunctionDeclaration, Type } from "@google/genai";
 import { z } from 'zod';
 import { withApiProtection } from '../utils/api';
 
+// This Zod schema should be consistent with the function declaration and is used to validate the AI's output.
 const auditRecordSchema = z.object({
   problem_summary: z.string().min(10, { message: "Summary must be at least 10 characters." }).max(200),
   solution_steps: z.array(z.string()),
@@ -68,7 +69,6 @@ const handler = async (req: Request) => {
         return new Response('Method Not Allowed', { status: 405 });
     }
     
-    // The main logic is now cleaner, as the wrapper handles top-level errors.
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
     const response = await ai.models.generateContent({
@@ -82,19 +82,40 @@ const handler = async (req: Request) => {
     
     const functionCall = response.functionCalls?.[0];
     
-    if (!functionCall || functionCall.name !== 'log_audit_record') {
-        throw new Error("Gemini did not return the expected function call.");
-    }
-    
-    const validationResult = auditRecordSchema.safeParse(functionCall.args);
+    let validatedData: z.infer<typeof auditRecordSchema>;
 
-    if (!validationResult.success) {
-         console.error("Zod validation failed:", validationResult.error.flatten());
-         throw new Error("Gemini response failed validation.");
+    if (functionCall?.name === 'log_audit_record') {
+        const validationResult = auditRecordSchema.safeParse(functionCall.args);
+        if (!validationResult.success) {
+            console.error("Zod validation failed on function call args:", validationResult.error.flatten());
+            throw new Error("Gemini function call args failed validation.");
+        }
+        validatedData = validationResult.data;
+    } else {
+        // Fallback: If no function call, try to parse the text response as JSON.
+        // The model sometimes returns a JSON object in a markdown block instead of a function call.
+        const textResponse = response.text;
+        console.warn("Gemini did not return a function call. Falling back to parsing text response.", textResponse);
+
+        // Regex to extract JSON from markdown code blocks like ```json ... ```
+        const jsonMatch = textResponse.match(/```(?:json)?\s*([\s\S]+?)\s*```/);
+        const jsonString = jsonMatch ? jsonMatch[1].trim() : textResponse.trim();
+        
+        try {
+            const parsedJson = JSON.parse(jsonString);
+            const validationResult = auditRecordSchema.safeParse(parsedJson);
+            if (!validationResult.success) {
+                console.error("Zod validation failed on text response JSON:", validationResult.error.flatten());
+                throw new Error("Gemini text response JSON failed validation.");
+            }
+            validatedData = validationResult.data;
+        } catch (e) {
+            const errorMessage = `Failed to get a valid structured response from Gemini. Text response was: "${textResponse}"`;
+            console.error(errorMessage, e);
+            throw new Error(errorMessage);
+        }
     }
 
-    const validatedData = validationResult.data;
-    
     // Here you would insert validatedData into the 'audit_records' table.
     // logData('audit_records', validatedData);
     console.log("Data to be stored:", validatedData);
