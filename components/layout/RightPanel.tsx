@@ -125,7 +125,7 @@ const RecordDetailView: React.FC<{ record: BatchAuditRecord }> = ({ record }) =>
 };
 
 const RightPanel: React.FC = () => {
-    // Split selectors to avoid creating a new object on every render, which causes excessive re-renders.
+    // FIX: Select state individually to prevent referential instability which causes infinite re-renders
     const isLiveMode = useAppStore(state => state.isLiveMode);
     const selectedRecordId = useAppStore(state => state.selectedRecordId);
     const records = useAppStore(state => state.records);
@@ -139,6 +139,8 @@ const RightPanel: React.FC = () => {
 
         const handleMouseMove = (moveEvent: MouseEvent) => {
             const newWidth = window.innerWidth - moveEvent.clientX;
+            // Debouncing or throttling could be added here if performance is an issue, 
+            // but for UI resizing, rAF or direct updates usually feel smoothest.
             setRightPanelWidth(newWidth);
         };
 
@@ -157,12 +159,19 @@ const RightPanel: React.FC = () => {
             <div
                 onMouseDown={handleMouseDown}
                 className="absolute top-0 left-0 -translate-x-1/2 h-full w-2 cursor-col-resize z-10 group"
+                aria-hidden="true"
             >
                 <div className="w-0.5 h-full bg-transparent group-hover:bg-accent-primary transition-colors duration-200 mx-auto"></div>
             </div>
 
             {isLiveMode && <LiveCallView />}
             {!isLiveMode && selectedRecord && <RecordDetailView record={selectedRecord} />}
+            {!isLiveMode && !selectedRecord && (
+                <div className="flex flex-col items-center justify-center h-full text-text-secondary p-8 text-center">
+                    <FileText size={48} className="mb-4 opacity-20" />
+                    <p>Select a recording to view details or start a Co-Pilot session.</p>
+                </div>
+            )}
         </aside>
     );
 };
