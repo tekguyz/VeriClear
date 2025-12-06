@@ -1,5 +1,4 @@
 
-
 import React, { useState, useCallback, useMemo } from 'react';
 import { X, FileText, CheckCircle, AlertTriangle, AlertCircle as AlertCircleIcon, Smile, Meh, Frown, ChevronsUp } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
@@ -10,7 +9,8 @@ import { format } from 'date-fns';
 
 type Tab = 'audit' | 'notes';
 
-const LiveCallView: React.FC = () => {
+// Renamed to avoid confusion with the main LiveCallView component
+const LiveSessionPanel: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('notes');
     return (
         <div className="p-6 flex flex-col h-full">
@@ -39,7 +39,7 @@ const LiveCallView: React.FC = () => {
 
             <div className="flex-1 min-h-0">
                 {activeTab === 'audit' && (
-                    <div id="tabpanel-audit" role="tabpanel" aria-labelledby="tab-audit" className="h-full overflow-y-auto">
+                    <div id="tabpanel-audit" role="tabpanel" aria-labelledby="tab-audit" className="h-full overflow-y-auto thin-scrollbar">
                         <AuditChecklist />
                     </div>
                 )}
@@ -78,7 +78,7 @@ const RecordDetailView: React.FC<{ record: BatchAuditRecord }> = ({ record }) =>
     const Sentiment = getSentimentInfo(record.callSentiment);
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full animate-fade-in">
              <div className="p-4 border-b border-border-color flex-shrink-0">
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 overflow-hidden">
@@ -125,7 +125,7 @@ const RecordDetailView: React.FC<{ record: BatchAuditRecord }> = ({ record }) =>
 };
 
 const RightPanel: React.FC = () => {
-    // FIX: Select state individually to prevent referential instability which causes infinite re-renders
+    // Explicitly isolated selectors to prevent re-render loops (Error #185)
     const isLiveMode = useAppStore(state => state.isLiveMode);
     const selectedRecordId = useAppStore(state => state.selectedRecordId);
     const records = useAppStore(state => state.records);
@@ -139,8 +139,6 @@ const RightPanel: React.FC = () => {
 
         const handleMouseMove = (moveEvent: MouseEvent) => {
             const newWidth = window.innerWidth - moveEvent.clientX;
-            // Debouncing or throttling could be added here if performance is an issue, 
-            // but for UI resizing, rAF or direct updates usually feel smoothest.
             setRightPanelWidth(newWidth);
         };
 
@@ -164,10 +162,10 @@ const RightPanel: React.FC = () => {
                 <div className="w-0.5 h-full bg-transparent group-hover:bg-accent-primary transition-colors duration-200 mx-auto"></div>
             </div>
 
-            {isLiveMode && <LiveCallView />}
+            {isLiveMode && <LiveSessionPanel />}
             {!isLiveMode && selectedRecord && <RecordDetailView record={selectedRecord} />}
             {!isLiveMode && !selectedRecord && (
-                <div className="flex flex-col items-center justify-center h-full text-text-secondary p-8 text-center">
+                <div className="flex flex-col items-center justify-center h-full text-text-secondary p-8 text-center animate-fade-in">
                     <FileText size={48} className="mb-4 opacity-20" />
                     <p>Select a recording to view details or start a Co-Pilot session.</p>
                 </div>
