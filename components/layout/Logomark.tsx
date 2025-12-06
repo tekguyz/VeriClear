@@ -20,37 +20,27 @@ export const Logomark: React.FC<{ className?: string }> = ({ className }) => (
       </linearGradient>
     </defs>
 
-    {/* Phone Body */}
-    <rect 
-      x="8" 
-      y="4" 
-      width="24" 
-      height="32" 
-      rx="6" 
-      className="text-text-primary" 
-      stroke="currentColor" 
-      strokeWidth="2.5" 
-      fill="none"
-    />
-    
-    {/* Inner Screen Area */}
-    <rect
-       x="11"
-       y="7"
-       width="18"
-       height="26"
-       rx="3"
-       fill="currentColor"
-       fillOpacity="0.05"
-       stroke="none"
+    {/* Hexagon Container Shape */}
+    <path
+      d="M20 2L35.5885 11V29L20 38L4.41154 29V11L20 2Z"
+      stroke="url(#gemini-gradient-logo)"
+      strokeWidth="2.5"
+      fill="currentColor"
+      fillOpacity="0.05"
+      strokeLinejoin="round"
     />
 
-    {/* Gemini Sparkle - Centered and larger */}
-    <path 
-      d="M20 10C20 10 22.5 15.5 28 20C22.5 24.5 20 30 20 30C20 30 17.5 24.5 12 20C17.5 15.5 20 10 20 10Z" 
-      fill="url(#gemini-gradient-logo)" 
-      stroke="none"
-      filter="drop-shadow(0px 0px 4px rgba(155, 114, 203, 0.4))"
+    {/* Sound Wave forming the Left side of V */}
+    <rect x="11" y="14" width="3" height="12" rx="1.5" fill="currentColor" className="text-text-primary" />
+    <rect x="16" y="18" width="3" height="8" rx="1.5" fill="currentColor" className="text-text-primary" />
+
+    {/* Checkmark forming the Right side of V */}
+    <path
+      d="M21 22L24 25L30 15"
+      stroke="url(#gemini-gradient-logo)"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     />
   </svg>
 );
