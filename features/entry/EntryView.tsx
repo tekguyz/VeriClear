@@ -100,7 +100,7 @@ const EntryView: React.FC = () => {
   return (
     <div className="bg-primary-background text-text-primary font-sans overflow-x-hidden">
       {/* Hero Section */}
-      <section className="relative flex flex-col lg:flex-row items-center justify-center min-h-[90vh] p-8 lg:px-16 lg:py-20 animate-fade-in">
+      <section className="relative flex flex-col lg:flex-row items-center justify-center min-h-[90vh] p-8 lg:px-16 lg:py-20 animate-fade-in overflow-hidden">
         
         {/* Left Column: Content */}
         <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left z-10 mb-12 lg:mb-0">

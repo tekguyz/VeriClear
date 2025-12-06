@@ -20,7 +20,7 @@ export const Logomark: React.FC<{ className?: string }> = ({ className }) => (
       </linearGradient>
     </defs>
 
-    {/* Hexagon Container Shape */}
+    {/* Modern Hexagon Container */}
     <path
       d="M20 2L35.5885 11V29L20 38L4.41154 29V11L20 2Z"
       stroke="url(#gemini-gradient-logo)"
@@ -30,11 +30,11 @@ export const Logomark: React.FC<{ className?: string }> = ({ className }) => (
       strokeLinejoin="round"
     />
 
-    {/* Sound Wave forming the Left side of V */}
+    {/* Sound Wave forming the Left side of a 'V' */}
     <rect x="11" y="14" width="3" height="12" rx="1.5" fill="currentColor" className="text-text-primary" />
     <rect x="16" y="18" width="3" height="8" rx="1.5" fill="currentColor" className="text-text-primary" />
 
-    {/* Checkmark forming the Right side of V */}
+    {/* Checkmark forming the Right side of a 'V' */}
     <path
       d="M21 22L24 25L30 15"
       stroke="url(#gemini-gradient-logo)"
