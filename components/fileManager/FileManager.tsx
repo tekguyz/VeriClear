@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Search, SlidersHorizontal, RefreshCw, X, Headset, FileUp } from 'lucide-react';
-import { formatDistanceToNow, subDays } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import type { BatchAuditRecord, AnalysisStatus, ComplianceStatus } from '../../types';
 import { analysisStatuses, complianceStatuses } from '../../types';
 import { useAppStore } from '../../store/appStore';
@@ -120,10 +121,8 @@ interface FileManagerContentProps {
 }
 
 const FileManagerContent: React.FC<FileManagerContentProps> = ({ records, isLoading, error, isDemo, onRefresh }) => {
-    const { selectedRecordId, setSelectedRecordId } = useAppStore(state => ({
-        selectedRecordId: state.selectedRecordId,
-        setSelectedRecordId: state.setSelectedRecordId,
-    }));
+    const selectedRecordId = useAppStore(state => state.selectedRecordId);
+    const setSelectedRecordId = useAppStore(state => state.setSelectedRecordId);
     
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<AnalysisStatus | 'all'>('all');
@@ -137,6 +136,8 @@ const FileManagerContent: React.FC<FileManagerContentProps> = ({ records, isLoad
 
     const filteredRecords = useMemo(() => {
         const now = new Date();
+        const oneDayMs = 24 * 60 * 60 * 1000;
+
         return records.filter(record => {
             const searchMatch = record.filename.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
             const statusMatch = statusFilter === 'all' || record.status === statusFilter;
@@ -144,11 +145,13 @@ const FileManagerContent: React.FC<FileManagerContentProps> = ({ records, isLoad
             const sourceMatch = sourceFilter === 'all' || record.source === sourceFilter;
 
             const recordDate = new Date(record.createdAt);
+            const timeDiff = now.getTime() - recordDate.getTime();
+            
             const dateMatch = (() => {
                 switch (dateFilter) {
-                    case '24h': return recordDate > subDays(now, 1);
-                    case '7d': return recordDate > subDays(now, 7);
-                    case '30d': return recordDate > subDays(now, 30);
+                    case '24h': return timeDiff <= oneDayMs;
+                    case '7d': return timeDiff <= 7 * oneDayMs;
+                    case '30d': return timeDiff <= 30 * oneDayMs;
                     case 'all':
                     default:
                       return true;
@@ -203,8 +206,8 @@ const FileManagerContent: React.FC<FileManagerContentProps> = ({ records, isLoad
                                         <div className="flex items-center gap-3 overflow-hidden">
                                             <div className="flex-shrink-0">
                                                 {record.source === 'co-pilot'
-                                                    ? <Headset size={24} className="text-icon-primary" ><title>Co-Pilot Session</title></Headset>
-                                                    : <FileUp size={24} className="text-icon-primary" ><title>File Upload</title></FileUp>
+                                                    ? <Headset size={24} className="text-icon-primary" />
+                                                    : <FileUp size={24} className="text-icon-primary" />
                                                 }
                                             </div>
                                             <div className="flex-1 overflow-hidden">
@@ -229,15 +232,17 @@ const FileManagerContent: React.FC<FileManagerContentProps> = ({ records, isLoad
                                     <th className="w-24 text-center font-semibold p-3">Source</th>
                                     <th className="w-40 text-left font-semibold p-3">Created</th>
                                     <th className="w-28 text-center font-semibold p-3">Status</th>
-                                    <th className="w-28 text-center font-semibold p-3 flex items-center justify-center gap-1">
-                                        <span>Result</span>
-                                        <InfoPopover content={
-                                        <div className="space-y-2">
-                                            <p><span className="font-bold text-blue-400">Passed:</span> The call met all quality standards.</p>
-                                            <p><span className="font-bold text-orange-400">Flagged:</span> A potential issue was detected for review.</p>
-                                            <p><span className="font-bold text-purple-400">Failed:</span> A clear issue or error was found.</p>
+                                    <th className="w-28 text-center font-semibold p-3">
+                                        <div className="flex items-center justify-center gap-1">
+                                            <span>Result</span>
+                                            <InfoPopover content={
+                                            <div className="space-y-2">
+                                                <p><span className="font-bold text-blue-400">Passed:</span> The call met all quality standards.</p>
+                                                <p><span className="font-bold text-orange-400">Flagged:</span> A potential issue was detected for review.</p>
+                                                <p><span className="font-bold text-purple-400">Failed:</span> A clear issue or error was found.</p>
+                                            </div>
+                                            } />
                                         </div>
-                                        } />
                                     </th>
                                 </tr>
                             </thead>
@@ -253,8 +258,8 @@ const FileManagerContent: React.FC<FileManagerContentProps> = ({ records, isLoad
                                         </td>
                                         <td className="p-3 text-center">
                                             {record.source === 'co-pilot'
-                                                ? <Headset size={18} className="text-icon-primary inline-block" ><title>Co-Pilot Session</title></Headset>
-                                                : <FileUp size={18} className="text-icon-primary inline-block" ><title>File Upload</title></FileUp>
+                                                ? <Headset size={18} className="text-icon-primary inline-block" />
+                                                : <FileUp size={18} className="text-icon-primary inline-block" />
                                             }
                                         </td>
                                         <td className="p-3 text-text-secondary">{formatDistanceToNow(new Date(record.createdAt), { addSuffix: true })}</td>
@@ -293,10 +298,8 @@ const FileManagerContent: React.FC<FileManagerContentProps> = ({ records, isLoad
 
 
 const FileManagerAppMode: React.FC = () => {
-    const { records, setRecords } = useAppStore(state => ({
-        records: state.records,
-        setRecords: state.setRecords,
-    }));
+    const records = useAppStore(state => state.records);
+    const setRecords = useAppStore(state => state.setRecords);
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
