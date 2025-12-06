@@ -1,11 +1,9 @@
 
 import React from 'react';
-// Fix: Use namespace import for react-router-dom to resolve export issues.
-import * as ReactRouterDOM from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
 const StaticPageLayout: React.FC<{ children: React.ReactNode; title: string }> = ({ children, title }) => {
-  const { Link } = ReactRouterDOM;
   return (
     <div className="min-h-screen flex flex-col bg-primary-background text-text-primary font-sans">
       <header className="py-4 px-8 border-b border-border-color">

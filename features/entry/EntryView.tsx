@@ -1,6 +1,6 @@
 
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PlayCircle, Zap, Headset, ListChecks, BarChart, CheckSquare, Smartphone, Puzzle, ChevronDown, Mail, Loader2 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import PricingTable from '../../components/pricing/PricingTable';
@@ -84,6 +84,14 @@ const EntryView: React.FC = () => {
   const [email, setEmail] = useState('');
   const [formStatus, setFormStatus] = useState<FormStatus>('idle');
   const [formMessage, setFormMessage] = useState('');
+  const componentIsMounted = useRef(true);
+
+  useEffect(() => {
+    componentIsMounted.current = true;
+    return () => {
+      componentIsMounted.current = false;
+    };
+  }, []);
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
@@ -100,12 +108,16 @@ const EntryView: React.FC = () => {
           body: formData.toString(),
       })
       .then(() => {
-          setFormStatus('success');
-          setFormMessage("Thanks for subscribing! We'll be in touch.");
+          if (componentIsMounted.current) {
+            setFormStatus('success');
+            setFormMessage("Thanks for subscribing! We'll be in touch.");
+          }
       })
       .catch((error) => {
-          setFormStatus('error');
-          setFormMessage('Oops! Something went wrong. Please try again.');
+          if (componentIsMounted.current) {
+            setFormStatus('error');
+            setFormMessage('Oops! Something went wrong. Please try again.');
+          }
       });
   };
   

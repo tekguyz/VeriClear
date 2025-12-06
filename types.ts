@@ -1,21 +1,7 @@
 
 
+
 import { z } from 'zod';
-
-export interface AuditRecord {
-  id: string;
-  timestamp: Date;
-  event: string;
-  details: string;
-  status: 'compliant' | 'warning' | 'non-compliant';
-}
-
-export interface ComplianceMetrics {
-  overallScore: number;
-  scriptAdherence: number;
-  disclosureAccuracy: number;
-  sentimentAnalysis: number;
-}
 
 export type AppView = 'analytics' | 'co-pilot' | 'batch' | 'settings';
 export type AppMode = 'demo' | 'app' | null;
@@ -39,7 +25,6 @@ export type AnalysisStatus = 'pending' | 'completed' | 'failed';
 export const analysisStatuses: AnalysisStatus[] = ['pending', 'completed', 'failed'];
 
 export type ComplianceStatus = 'passed' | 'failed' | 'flagged';
-// Fix: Corrected the type from the variable name `complianceStatuses` to the type name `ComplianceStatus`.
 export const complianceStatuses: ComplianceStatus[] = ['passed', 'failed', 'flagged'];
 
 

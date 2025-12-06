@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../../store/appStore';
-import * as ReactRouterDOM from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import {
   ChevronRight, User, Settings as Cog, Palette, Database, Shield, Info, LogOut,
   ArrowLeft, Sun, Moon, Trash2, Link as LinkIcon, Users, Mic, FileCog, HelpCircle,
@@ -241,7 +242,6 @@ const SecuritySettings = () => (
 
 
 const AboutSettings = () => {
-    const { NavLink } = ReactRouterDOM;
     const aboutLinks = [
         { to: '/help', label: 'Help Center', icon: HelpCircle },
         { to: '/terms', label: 'Terms of Use', icon: FileCog },

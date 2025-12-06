@@ -1,5 +1,6 @@
+
 import { create } from 'zustand';
-import type { AuditRecord, ComplianceMetrics, AppView, TimelineEvent, AppMode } from '../types';
+import type { AppView, TimelineEvent, AppMode, BatchAuditRecord, AnalyticsMetrics } from '../types';
 
 interface ToastState {
   id: number;
@@ -19,10 +20,10 @@ interface AppState {
   isLiveMode: boolean;
   isRecording: boolean;
   liveTranscription: string[];
-  uploadedFiles: File[];
+  records: BatchAuditRecord[];
+  selectedRecordId: string | null;
   currentAnalysis: object | null;
-  auditRecords: AuditRecord[];
-  complianceMetrics: ComplianceMetrics | null;
+  analyticsMetrics: AnalyticsMetrics | null;
   currentView: AppView;
   isLeftPanelOpen: boolean;
   rightPanelVisible: boolean;
@@ -37,7 +38,6 @@ interface AppState {
   hapticFeedbackEnabled: boolean;
   toast: ToastState | null;
   confirmDialog: ConfirmDialogState;
-  isConfettiVisible: boolean;
 
   // Actions
   toggleLeftPanelOpen: () => void;
@@ -48,8 +48,8 @@ interface AppState {
   startLiveCall: () => void;
   stopLiveCall: () => void;
   addTranscriptionSegment: (segment: string) => void;
-  uploadFile: (file: File) => void;
-  fetchAuditRecords: () => void;
+  setRecords: (records: BatchAuditRecord[]) => void;
+  setSelectedRecordId: (id: string | null) => void;
   addTimelineEvent: (event: Omit<TimelineEvent, 'id' | 'timestamp'>) => void;
   setAppMode: (mode: 'demo' | 'app' | null) => void;
   resetState: () => void;
@@ -62,7 +62,6 @@ interface AppState {
   showToast: (message: string, type?: 'success' | 'error') => void;
   hideToast: () => void;
   showConfirmDialog: (title: string, message: string, onConfirm: () => void) => void;
-  showConfetti: () => void;
 }
 
 const getInitialLeftPanelState = (): boolean => {
@@ -130,18 +129,78 @@ const getInitialHapticState = (): boolean => {
     }
 };
 
-const mockAuditRecords: AuditRecord[] = [
-    { id: '1', timestamp: new Date(), event: 'Disclosure Acknowledged', details: 'Agent confirmed customer understood terms.', status: 'compliant' },
-    { id: '2', timestamp: new Date(Date.now() - 2 * 60000), event: 'Sentiment Drop', details: 'Customer sentiment dropped below -0.5.', status: 'warning' },
-    { id: '3', timestamp: new Date(Date.now() - 5 * 60000), event: 'Missing Disclosure', details: 'Required privacy disclosure was not read.', status: 'non-compliant' },
-    { id: '4', timestamp: new Date(Date.now() - 10 * 60000), event: 'Call Initiated', details: 'Live call started with customer ID 12345.', status: 'compliant' },
+const demoRecords: BatchAuditRecord[] = [
+  {
+    id: '1',
+    filename: 'Support_Call_Oct23.wav',
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    status: 'completed',
+    complianceFlag: 'flagged',
+    source: 'upload',
+    problemSummary: 'Agent missed required disclosure and an upsell opportunity, but resolved the primary issue.',
+    callSentiment: 'neutral',
+    agentPerformanceScore: 6,
+  },
+  {
+    id: '2',
+    filename: 'Co-Pilot_Oct22.mp3',
+    createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'completed',
+    complianceFlag: 'passed',
+    source: 'co-pilot',
+    problemSummary: 'Customer successfully updated their contact information with agent guidance.',
+    callSentiment: 'positive',
+    agentPerformanceScore: 10,
+  },
+  {
+    id: '3',
+    filename: 'Q3_Sales_Ref7821.mp3',
+    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'completed',
+    complianceFlag: 'passed',
+    source: 'upload',
+    problemSummary: 'The agent successfully addressed all customer concerns regarding billing changes.',
+    callSentiment: 'positive',
+    agentPerformanceScore: 9,
+  },
 ];
 
-const mockComplianceMetrics: ComplianceMetrics = {
-    overallScore: 85,
-    scriptAdherence: 92,
-    disclosureAccuracy: 78,
-    sentimentAnalysis: 88,
+
+const mockAnalyticsMetrics: AnalyticsMetrics = {
+    totalCalls: {
+        value: '3',
+        label: 'Total Calls Reviewed',
+        change: 12.5,
+        changeType: 'increase',
+    },
+    complianceRate: {
+        value: '67%',
+        label: 'Pass Rate',
+        change: 5.2,
+        changeType: 'increase',
+        progress: 67,
+    },
+    averageSentiment: {
+        value: 'Positive',
+        label: 'Average Sentiment',
+        change: 2.1,
+        changeType: 'increase',
+    },
+    agentPerformance: {
+        value: '8.3/10',
+        label: 'Agent Performance',
+        change: 0.5,
+        changeType: 'increase',
+    },
+    callVolume: [
+        { date: 'Mon', calls: 12 }, { date: 'Tue', calls: 19 }, { date: 'Wed', calls: 3 }, { date: 'Thu', calls: 5 }, { date: 'Fri', calls: 2 }, { date: 'Sat', calls: 3 }, { date: 'Sun', calls: 9 },
+    ],
+    complianceTrends: [
+        { date: 'Jan', passed: 120, flagged: 15, failed: 3 },
+        { date: 'Feb', passed: 130, flagged: 12, failed: 2 },
+        { date: 'Mar', passed: 145, flagged: 10, failed: 2 },
+        { date: 'Apr', passed: 140, flagged: 11, failed: 3 },
+    ],
 };
 
 const mockTimelineEvents: TimelineEvent[] = [
@@ -179,10 +238,10 @@ const initialState = {
   isLiveMode: false,
   isRecording: false,
   liveTranscription: [],
-  uploadedFiles: [],
+  records: [],
+  selectedRecordId: null,
   currentAnalysis: null,
-  auditRecords: [],
-  complianceMetrics: null,
+  analyticsMetrics: null,
   currentView: 'analytics' as AppView,
   isLeftPanelOpen: getInitialLeftPanelState(),
   rightPanelVisible: false,
@@ -203,7 +262,6 @@ const initialState = {
     onConfirm: () => {},
     onCancel: () => {},
   },
-  isConfettiVisible: false,
 };
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -260,7 +318,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     return { isLeftPanelOpen: isOpen };
   }),
 
-  toggleRightPanel: () => set((state) => ({ rightPanelVisible: !state.rightPanelVisible })),
+  toggleRightPanel: () => set((state) => {
+      const isOpening = !state.rightPanelVisible;
+      // If closing, also clear selection. If opening, behavior is neutral.
+      return {
+          rightPanelVisible: isOpening,
+          selectedRecordId: isOpening ? state.selectedRecordId : null
+      };
+  }),
   setRightPanelVisible: (visible: boolean) => set({ rightPanelVisible: visible }),
   setRightPanelWidth: (width) => {
     const constrainedWidth = Math.max(320, Math.min(800, width));
@@ -274,9 +339,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   
   setAppMode: (mode) => {
     if (mode === 'demo') {
-      set({ appMode: mode, timelineEvents: mockTimelineEvents, auditRecords: mockAuditRecords, complianceMetrics: mockComplianceMetrics });
+      set({ appMode: mode, timelineEvents: mockTimelineEvents, records: demoRecords, analyticsMetrics: mockAnalyticsMetrics });
     } else {
-      set({ appMode: mode, timelineEvents: [], auditRecords: [], complianceMetrics: null });
+      set({ appMode: mode, timelineEvents: [], records: [], analyticsMetrics: null });
     }
   },
 
@@ -290,15 +355,25 @@ export const useAppStore = create<AppState>((set, get) => ({
         isLiveMode: true,
         isRecording: true,
         liveTranscription: ['[Call Started]...'],
-        timelineEvents: [{ ...startEvent, id: crypto.randomUUID(), timestamp: new Date() }]
+        timelineEvents: [{ ...startEvent, id: crypto.randomUUID(), timestamp: new Date() }],
+        selectedRecordId: null, // De-select any record to focus on live call
+        rightPanelVisible: true, // Always show panel for live call
     }
   }),
-  stopLiveCall: () => set({ isLiveMode: false, isRecording: false }),
+  stopLiveCall: () => {
+    get().showToast('Live call review saved successfully!', 'success');
+    set({ isLiveMode: false, isRecording: false });
+  },
   addTranscriptionSegment: (segment) => set((state) => ({ liveTranscription: [...state.liveTranscription, segment] })),
   
-  uploadFile: (file) => set((state) => ({ uploadedFiles: [...state.uploadedFiles, file] })),
-  
-  fetchAuditRecords: () => set({ auditRecords: mockAuditRecords, complianceMetrics: mockComplianceMetrics }),
+  setRecords: (records) => set({ records }),
+
+  setSelectedRecordId: (id) => set(state => ({
+      selectedRecordId: id,
+      // Open panel if a record is selected.
+      // If deselected, close panel ONLY if not in a live call.
+      rightPanelVisible: id !== null || state.isLiveMode,
+  })),
   
   addTimelineEvent: (event) => set((state) => ({
     timelineEvents: [...state.timelineEvents, { ...event, id: crypto.randomUUID(), timestamp: new Date() }]
@@ -328,11 +403,5 @@ export const useAppStore = create<AppState>((set, get) => ({
         },
       },
     });
-  },
-
-  showConfetti: () => {
-    set({ isConfettiVisible: true });
-    // Hide after the animation duration
-    setTimeout(() => set({ isConfettiVisible: false }), 4000);
   },
 }));

@@ -1,7 +1,8 @@
 
 
 
-import React, { useState } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, BarChart, Headset, Upload, ListChecks, History, BookOpen, Smartphone, Puzzle, Star, Bug, Lightbulb, MessageSquare, Loader2, Send, Mail, CreditCard, Shield, Wrench } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 
@@ -171,7 +172,14 @@ const FeedbackContent: React.FC = () => {
     const [comments, setComments] = useState('');
     const [email, setEmail] = useState('');
     const [status, setStatus] = useState<FormStatus>('idle');
+    const componentIsMounted = useRef(true);
 
+    useEffect(() => {
+      componentIsMounted.current = true;
+      return () => {
+        componentIsMounted.current = false;
+      };
+    }, []);
 
     const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
@@ -195,19 +203,31 @@ const FeedbackContent: React.FC = () => {
           body: formData.toString(),
       })
       .then(() => {
-          setStatus('success');
-          showToast('Thank you for your feedback!', 'success');
-          // Reset form
-          setRating(0);
-          setFeedbackType(null);
-          setComments('');
-          setEmail('');
-          setTimeout(() => setStatus('idle'), 3000);
+          if (componentIsMounted.current) {
+              setStatus('success');
+              showToast('Thank you for your feedback!', 'success');
+              // Reset form
+              setRating(0);
+              setFeedbackType(null);
+              setComments('');
+              setEmail('');
+              setTimeout(() => {
+                  if (componentIsMounted.current) {
+                      setStatus('idle');
+                  }
+              }, 3000);
+          }
       })
       .catch(() => {
-          setStatus('error');
-          showToast('Oops! Something went wrong. Please try again.', 'error');
-          setTimeout(() => setStatus('idle'), 3000);
+          if (componentIsMounted.current) {
+              setStatus('error');
+              showToast('Oops! Something went wrong. Please try again.', 'error');
+               setTimeout(() => {
+                  if (componentIsMounted.current) {
+                      setStatus('idle');
+                  }
+              }, 3000);
+          }
       });
   };
 

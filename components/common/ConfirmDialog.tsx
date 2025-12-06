@@ -1,4 +1,5 @@
 
+
 import React, { useEffect, useRef } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
@@ -13,7 +14,8 @@ const ConfirmDialog: React.FC = () => {
     const modalElement = modalRef.current;
     if (!modalElement) return;
 
-    const focusableElements = modalElement.querySelectorAll<HTMLElement>('button');
+    // Fix: Cast the result of querySelectorAll to NodeListOf<HTMLElement> to resolve potential generic type argument errors.
+    const focusableElements = modalElement.querySelectorAll('button') as NodeListOf<HTMLElement>;
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
 

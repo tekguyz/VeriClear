@@ -1,8 +1,6 @@
 
-
 import React, { Suspense, useEffect } from 'react';
-// Fix: Use namespace import for react-router-dom to resolve export issues.
-import * as ReactRouterDOM from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import { useAppStore } from './store/appStore';
 import EntryView from './features/entry/EntryView';
@@ -10,7 +8,6 @@ import PricingModal from './components/pricing/PricingModal';
 import PaymentModal from './components/pricing/PaymentModal';
 import ToastContainer from './components/common/Toast';
 import ConfirmDialog from './components/common/ConfirmDialog';
-import Confetti from './components/common/Confetti';
 
 // --- Code Splitting for all views ---
 const AnalyticsView = React.lazy(() => import('./features/dashboard/DashboardView'));
@@ -38,8 +35,6 @@ const App: React.FC = () => {
   const theme = useAppStore((state) => state.theme);
   const isPricingModalVisible = useAppStore((state) => state.isPricingModalVisible);
   const isPaymentModalVisible = useAppStore((state) => state.isPaymentModalVisible);
-  const isConfettiVisible = useAppStore((state) => state.isConfettiVisible);
-  const { HashRouter, Routes, Route, Navigate } = ReactRouterDOM;
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -53,7 +48,6 @@ const App: React.FC = () => {
     <HashRouter>
       {isPricingModalVisible && <PricingModal />}
       {isPaymentModalVisible && <PaymentModal />}
-      {isConfettiVisible && <Confetti />}
       <ToastContainer />
       <ConfirmDialog />
       <Suspense fallback={<LoadingSpinner />}>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { X, CreditCard, Calendar, Lock, Users, Loader2, Check, User, Mail } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
@@ -6,10 +5,18 @@ import { useAppStore } from '../../store/appStore';
 type PaymentStatus = 'idle' | 'loading' | 'success';
 
 const PaymentModal: React.FC = () => {
-    const { closePaymentModal, showConfetti } = useAppStore(state => ({ closePaymentModal: state.closePaymentModal, showConfetti: state.showConfetti }));
+    const { closePaymentModal } = useAppStore(state => ({ closePaymentModal: state.closePaymentModal }));
     const [seats, setSeats] = useState(1);
     const [status, setStatus] = useState<PaymentStatus>('idle');
     const modalRef = useRef<HTMLDivElement>(null);
+    const componentIsMounted = useRef(true);
+
+    useEffect(() => {
+        componentIsMounted.current = true;
+        return () => {
+            componentIsMounted.current = false;
+        };
+    }, []);
 
     const handleSeatsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         let value = parseInt(e.target.value, 10);
@@ -24,11 +31,14 @@ const PaymentModal: React.FC = () => {
 
         setStatus('loading');
         setTimeout(() => {
-            setStatus('success');
-            showConfetti();
-            setTimeout(() => {
-                closePaymentModal();
-            }, 1500); // Close after success message
+            if (componentIsMounted.current) {
+                setStatus('success');
+                setTimeout(() => {
+                    if (componentIsMounted.current) {
+                       closePaymentModal();
+                    }
+                }, 1500); // Close after success message
+            }
         }, 2000); // Simulate network request
     };
 
@@ -42,9 +52,10 @@ const PaymentModal: React.FC = () => {
             }
         };
         
-        const focusableElements = modalElement.querySelectorAll<HTMLElement>(
+        // Fix: Cast the result of querySelectorAll to NodeListOf<HTMLElement> to resolve potential generic type argument errors.
+        const focusableElements = modalElement.querySelectorAll(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
+        ) as NodeListOf<HTMLElement>;
         const firstElement = focusableElements[0];
         const lastElement = focusableElements[focusableElements.length - 1];
         

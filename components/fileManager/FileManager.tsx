@@ -1,11 +1,9 @@
-
-
-
-import React, { useState, useEffect, useMemo } from 'react';
-import { Search, SlidersHorizontal, RefreshCw, MoreHorizontal, X, Headset, FileUp } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { Search, SlidersHorizontal, RefreshCw, X, Headset, FileUp } from 'lucide-react';
 import { formatDistanceToNow, subDays } from 'date-fns';
 import type { BatchAuditRecord, AnalysisStatus, ComplianceStatus } from '../../types';
 import { analysisStatuses, complianceStatuses } from '../../types';
+import { useAppStore } from '../../store/appStore';
 import InfoPopover from '../common/InfoPopover';
 
 function useDebounce<T>(value: T, delay: number): T {
@@ -113,10 +111,20 @@ const FilterPanel: React.FC<{
     );
 };
 
-const FileManager: React.FC = () => {
-    const [records, setRecords] = useState<BatchAuditRecord[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+interface FileManagerContentProps {
+    records: BatchAuditRecord[];
+    isLoading: boolean;
+    error: string | null;
+    isDemo: boolean;
+    onRefresh: () => void;
+}
+
+const FileManagerContent: React.FC<FileManagerContentProps> = ({ records, isLoading, error, isDemo, onRefresh }) => {
+    const { selectedRecordId, setSelectedRecordId } = useAppStore(state => ({
+        selectedRecordId: state.selectedRecordId,
+        setSelectedRecordId: state.setSelectedRecordId,
+    }));
+    
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<AnalysisStatus | 'all'>('all');
     const [complianceFilter, setComplianceFilter] = useState<ComplianceStatus | 'all'>('all');
@@ -125,26 +133,6 @@ const FileManager: React.FC = () => {
     const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
-
-    const fetchRecords = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await fetch('/.netlify/functions/getAuditRecords');
-            if (!response.ok) throw new Error('Failed to fetch records.');
-            const data = await response.json();
-            setRecords(data.records);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'An unknown error occurred.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchRecords();
-    }, []);
-    
     const areFiltersActive = dateFilter !== 'all' || statusFilter !== 'all' || complianceFilter !== 'all' || sourceFilter !== 'all';
 
     const filteredRecords = useMemo(() => {
@@ -175,8 +163,8 @@ const FileManager: React.FC = () => {
         <div className="bg-panel-background border border-border-color rounded-2xl p-4 md:p-6 h-full flex flex-col">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-text-primary">All Reviews</h3>
-                 <button onClick={fetchRecords} className="p-2 text-text-secondary hover:text-text-primary hover:bg-interactive-background-hover rounded-full transition-colors">
-                    <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                 <button onClick={onRefresh} disabled={isDemo} className="p-2 text-text-secondary hover:text-text-primary hover:bg-interactive-background-hover rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
                 </button>
             </div>
             
@@ -199,20 +187,24 @@ const FileManager: React.FC = () => {
             </div>
             
             <div className="flex-1 overflow-y-auto -mr-2 pr-2">
-                 {loading && <p className="text-center text-text-secondary py-8">Loading records...</p>}
+                 {isLoading && <p className="text-center text-text-secondary py-8">Loading records...</p>}
                 {error && <p className="text-center text-red-400 py-8">{error}</p>}
-                {!loading && !error && (
+                {!isLoading && !error && (
                     <>
                         {/* --- Mobile Card View --- */}
                         <div className="space-y-3 md:hidden">
                            {filteredRecords.length > 0 ? filteredRecords.map(record => (
-                                <div key={record.id} className="bg-subtle-background rounded-lg p-4">
+                                <div 
+                                    key={record.id} 
+                                    onClick={() => setSelectedRecordId(record.id)}
+                                    className={`rounded-lg p-4 cursor-pointer transition-colors ${selectedRecordId === record.id ? 'bg-accent-primary/10' : 'bg-subtle-background hover:bg-interactive-background-hover'}`}
+                                >
                                     <div className="flex items-start justify-between mb-3">
                                         <div className="flex items-center gap-3 overflow-hidden">
                                             <div className="flex-shrink-0">
                                                 {record.source === 'co-pilot'
-                                                    ? <Headset size={24} className="text-icon-primary" title="Co-Pilot Session" />
-                                                    : <FileUp size={24} className="text-icon-primary" title="File Upload" />
+                                                    ? <Headset size={24} className="text-icon-primary" ><title>Co-Pilot Session</title></Headset>
+                                                    : <FileUp size={24} className="text-icon-primary" ><title>File Upload</title></FileUp>
                                                 }
                                             </div>
                                             <div className="flex-1 overflow-hidden">
@@ -220,7 +212,6 @@ const FileManager: React.FC = () => {
                                                 <p className="text-xs text-text-secondary">{formatDistanceToNow(new Date(record.createdAt), { addSuffix: true })}</p>
                                             </div>
                                         </div>
-                                         <button className="flex-shrink-0 p-1 -mr-1 text-text-secondary hover:text-text-primary"><MoreHorizontal size={20} /></button>
                                     </div>
                                     <div className="flex items-center gap-2 flex-wrap">
                                          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${getStatusBadgeClass(record.status)}`}>{record.status}</span>
@@ -248,19 +239,22 @@ const FileManager: React.FC = () => {
                                         </div>
                                         } />
                                     </th>
-                                    <th className="w-10 text-center font-semibold p-3"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredRecords.length > 0 ? filteredRecords.map(record => (
-                                     <tr key={record.id} className="hover:bg-interactive-background-hover">
+                                     <tr 
+                                        key={record.id} 
+                                        onClick={() => setSelectedRecordId(record.id)}
+                                        className={`cursor-pointer transition-colors ${selectedRecordId === record.id ? 'bg-accent-primary/10' : 'hover:bg-interactive-background-hover'}`}
+                                    >
                                         <td className="p-3">
                                             <p className="font-medium truncate" title={record.filename}>{record.filename}</p>
                                         </td>
                                         <td className="p-3 text-center">
                                             {record.source === 'co-pilot'
-                                                ? <Headset size={18} className="text-icon-primary inline-block" title="Co-Pilot Session" />
-                                                : <FileUp size={18} className="text-icon-primary inline-block" title="File Upload" />
+                                                ? <Headset size={18} className="text-icon-primary inline-block" ><title>Co-Pilot Session</title></Headset>
+                                                : <FileUp size={18} className="text-icon-primary inline-block" ><title>File Upload</title></FileUp>
                                             }
                                         </td>
                                         <td className="p-3 text-text-secondary">{formatDistanceToNow(new Date(record.createdAt), { addSuffix: true })}</td>
@@ -270,13 +264,10 @@ const FileManager: React.FC = () => {
                                         <td className="p-3 text-center">
                                             <span className={`text-xs font-semibold px-2 py-1 rounded-full ${getComplianceBadgeClass(record.complianceFlag)}`}>{record.complianceFlag}</span>
                                         </td>
-                                        <td className="p-3 text-center">
-                                            <button className="text-text-secondary hover:text-text-primary"><MoreHorizontal size={18} /></button>
-                                        </td>
                                      </tr>
                                 )) : (
                                     <tr>
-                                        <td colSpan={6} className="text-center text-text-secondary py-8">No records found.</td>
+                                        <td colSpan={5} className="text-center text-text-secondary py-8">No records found.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -298,6 +289,75 @@ const FileManager: React.FC = () => {
             />
         </div>
     );
+};
+
+
+const FileManagerAppMode: React.FC = () => {
+    const { records, setRecords } = useAppStore(state => ({
+        records: state.records,
+        setRecords: state.setRecords,
+    }));
+
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const componentIsMounted = useRef(true);
+
+    useEffect(() => {
+        componentIsMounted.current = true;
+        return () => {
+            componentIsMounted.current = false;
+        };
+    }, []);
+
+    const fetchRecords = useCallback(async () => {
+        if (!componentIsMounted.current) return;
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch('/.netlify/functions/getAuditRecords');
+            if (!response.ok) throw new Error('Failed to fetch records.');
+            const data = await response.json();
+            if (componentIsMounted.current) {
+                setRecords(data.records);
+            }
+        } catch (err) {
+            if (componentIsMounted.current) {
+                setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+            }
+        } finally {
+            if (componentIsMounted.current) {
+                setLoading(false);
+            }
+        }
+    }, [setRecords]);
+    
+    useEffect(() => {
+        // Fetch only if records are not already populated
+        if (records.length === 0) {
+            fetchRecords();
+        } else {
+            setLoading(false);
+        }
+    }, [records.length, fetchRecords]);
+
+    return <FileManagerContent records={records} isLoading={loading} error={error} isDemo={false} onRefresh={fetchRecords} />;
+};
+
+
+const FileManagerDemoMode: React.FC = () => {
+    const records = useAppStore(state => state.records);
+    return <FileManagerContent records={records} isLoading={false} error={null} isDemo={true} onRefresh={() => {}} />;
+};
+
+
+const FileManager: React.FC = () => {
+    const appMode = useAppStore(state => state.appMode);
+
+    if (appMode === 'demo') {
+        return <FileManagerDemoMode />;
+    }
+
+    return <FileManagerAppMode />;
 };
 
 export default FileManager;

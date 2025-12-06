@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Mic, PhoneOff, Bot, User, AlertCircle, Phone, Video, X, Info, CaseSensitive, Maximize, Minimize } from 'lucide-react';
 import { GoogleGenAI, FunctionDeclaration, Type, Modality, LiveServerMessage } from '@google/genai';
@@ -11,8 +9,6 @@ import AudioVisualizer from './AudioVisualizer';
 type CallState = 'idle' | 'connecting' | 'active' | 'error';
 const MAX_CALL_DURATION_SECONDS = 900; // 15 minutes
 
-// Fix: Per Gemini API guidelines, do not use external libraries for encoding.
-// Implement the encode function manually.
 function encode(bytes: Uint8Array) {
   let binary = '';
   const len = bytes.byteLength;
@@ -22,7 +18,6 @@ function encode(bytes: Uint8Array) {
   return btoa(binary);
 }
 
-// --- Reusable Hook for Outside Clicks ---
 const useOnClickOutside = (ref: React.RefObject<HTMLElement>, handler: (event: MouseEvent | TouchEvent) => void) => {
   useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent) => {
@@ -40,112 +35,52 @@ const useOnClickOutside = (ref: React.RefObject<HTMLElement>, handler: (event: M
   }, [ref, handler]);
 };
 
-// --- Function Declarations for Agent Assistance ---
 const functionDeclarations: FunctionDeclaration[] = [
-    {
-        name: 'knowledge_base_lookup',
-        description: "Search internal resources for information.",
-        parameters: { type: Type.OBJECT, properties: { query: { type: Type.STRING, description: "The search query." } }, required: ["query"] }
-    },
-    {
-        name: 'compliance_check',
-        description: "Verify if a statement adheres to compliance requirements.",
-        parameters: { type: Type.OBJECT, properties: { statement: { type: Type.STRING, description: "The statement to check." } }, required: ["statement"] }
-    },
-    {
-        name: 'escalation_alert',
-        description: "Trigger an alert for supervisor assistance.",
-        parameters: {
-            type: Type.OBJECT, properties: {
-                reason: { type: Type.STRING, description: "The reason for escalation." },
-                urgency: { type: Type.STRING, enum: ['high', 'medium', 'low'], description: "The urgency level." }
-            }, required: ["reason", "urgency"]
-        }
-    },
-    {
-        name: 'customer_data_retrieve',
-        description: "Retrieve customer details from the CRM.",
-        parameters: { type: Type.OBJECT, properties: { customerId: { type: Type.STRING, description: "The customer's ID." } }, required: ["customerId"] }
-    }
+    { name: 'knowledge_base_lookup', description: "Search internal resources for information.", parameters: { type: Type.OBJECT, properties: { query: { type: Type.STRING, description: "The search query." } }, required: ["query"] } },
+    { name: 'compliance_check', description: "Verify if a statement adheres to compliance requirements.", parameters: { type: Type.OBJECT, properties: { statement: { type: Type.STRING, description: "The statement to check." } }, required: ["statement"] } },
+    { name: 'escalation_alert', description: "Trigger an alert for supervisor assistance.", parameters: { type: Type.OBJECT, properties: { reason: { type: Type.STRING, description: "The reason for escalation." }, urgency: { type: Type.STRING, enum: ['high', 'medium', 'low'], description: "The urgency level." } }, required: ["reason", "urgency"] } },
+    { name: 'customer_data_retrieve', description: "Retrieve customer details from the CRM.", parameters: { type: Type.OBJECT, properties: { customerId: { type: Type.STRING, description: "The customer's ID." } }, required: ["customerId"] } }
 ];
 
-// --- Call Launcher Modal for Mobile ---
 const CallLauncherModal: React.FC<{ onClose: () => void; onRecord: () => void; }> = ({ onClose, onRecord }) => {
     const modalRef = useRef<HTMLDivElement>(null);
-
     useEffect(() => {
         const modalElement = modalRef.current;
         if (!modalElement) return;
-
-        const focusableElements = modalElement.querySelectorAll<HTMLElement>('button, a');
+        const focusableElements = modalElement.querySelectorAll('button, a') as NodeListOf<HTMLElement>;
         const firstElement = focusableElements[0];
         const lastElement = focusableElements[focusableElements.length - 1];
-
         firstElement?.focus();
-
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') onClose();
             if (event.key === 'Tab') {
-                if (event.shiftKey) {
-                    if (document.activeElement === firstElement) {
-                        lastElement.focus();
-                        event.preventDefault();
-                    }
-                } else {
-                    if (document.activeElement === lastElement) {
-                        firstElement.focus();
-                        event.preventDefault();
-                    }
-                }
+                if (event.shiftKey) { if (document.activeElement === firstElement) { lastElement.focus(); event.preventDefault(); } } 
+                else { if (document.activeElement === lastElement) { firstElement.focus(); event.preventDefault(); } }
             }
         };
-        const handleClickOutside = (event: MouseEvent) => {
-            if (modalRef.current && !modalRef.current.contains(event.target as Node)) onClose();
-        };
-
+        const handleClickOutside = (event: MouseEvent) => { if (modalRef.current && !modalRef.current.contains(event.target as Node)) onClose(); };
         document.addEventListener('keydown', handleKeyDown);
         document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('keydown', handleKeyDown);
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
+        return () => { document.removeEventListener('keydown', handleKeyDown); document.removeEventListener('mousedown', handleClickOutside); };
     }, [onClose]);
-
     return (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
             <div ref={modalRef} className="relative w-full max-w-sm bg-panel-background border border-border-color rounded-2xl shadow-2xl p-6 text-center" role="dialog" aria-modal="true" aria-labelledby="launcher-title">
                 <h2 id="launcher-title" className="text-xl font-bold mb-2">Start a Session</h2>
                 <p className="text-sm text-text-secondary mb-6">First, start your conversation in another app, then begin recording here.</p>
                 <div className="space-y-3">
-                    <a href="tel:" className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-interactive-background-hover text-text-primary text-md font-semibold rounded-lg hover:bg-border-color transition-colors">
-                        <Phone size={20} />
-                        Start a Phone Call
-                    </a>
-                     <a href="zoommtg://" className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-interactive-background-hover text-text-primary text-md font-semibold rounded-lg hover:bg-border-color transition-colors">
-                        <Video size={20} />
-                        Open Zoom
-                    </a>
-                     <a href="gmeet://" className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-interactive-background-hover text-text-primary text-md font-semibold rounded-lg hover:bg-border-color transition-colors">
-                        <Video size={20} />
-                        Open Google Meet
-                    </a>
+                    <a href="tel:" className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-interactive-background-hover text-text-primary text-md font-semibold rounded-lg hover:bg-border-color transition-colors"> <Phone size={20} /> Start a Phone Call </a>
+                    <a href="zoommtg://" className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-interactive-background-hover text-text-primary text-md font-semibold rounded-lg hover:bg-border-color transition-colors"> <Video size={20} /> Open Zoom </a>
+                    <a href="gmeet://" className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-interactive-background-hover text-text-primary text-md font-semibold rounded-lg hover:bg-border-color transition-colors"> <Video size={20} /> Open Google Meet </a>
                     <hr className="border-border-color" />
-                    <button onClick={onRecord} className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-accent-primary text-text-inverted text-md font-semibold rounded-lg hover:bg-accent-primary-hover transition-colors">
-                        <Mic size={20} />
-                        Just Record Audio
-                    </button>
+                    <button onClick={onRecord} className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-accent-primary text-text-inverted text-md font-semibold rounded-lg hover:bg-accent-primary-hover transition-colors"> <Mic size={20} /> Just Record Audio </button>
                 </div>
-                <div className="mt-6 text-xs text-text-secondary bg-primary-background p-3 rounded-lg">
-                    <strong>Important:</strong> This app must remain open and in the foreground for the Co-Pilot to function correctly.
-                </div>
-                <button onClick={onClose} className="absolute top-4 right-4 text-text-secondary hover:text-text-primary" aria-label="Close">
-                    <X size={24} />
-                </button>
+                <div className="mt-6 text-xs text-text-secondary bg-primary-background p-3 rounded-lg"> <strong>Important:</strong> This app must remain open and in the foreground for the Co-Pilot to function correctly. </div>
+                <button onClick={onClose} className="absolute top-4 right-4 text-text-secondary hover:text-text-primary" aria-label="Close"> <X size={24} /> </button>
             </div>
         </div>
     );
 };
-
 
 const LiveCallInterface: React.FC = () => {
     const [callState, setCallState] = useState<CallState>('idle');
@@ -156,11 +91,12 @@ const LiveCallInterface: React.FC = () => {
     const [isHelpTooltipVisible, setHelpTooltipVisible] = useState(false);
     const [textSize, setTextSize] = useState<'sm' | 'base' | 'lg'>('base');
     const [isFullScreen, setIsFullScreen] = useState(false);
+    
+    const componentIsMounted = useRef(true);
     const isMobileRef = useRef(false);
     
     const addTimelineEvent = useAppStore(state => state.addTimelineEvent);
-    // Fix: Corrected typo from `useAppAppStore` to `useAppStore`.
-    const startStoreCall = useAppStore(state => state.startLiveCall);
+    const startLiveCall = useAppStore(state => state.startLiveCall);
     const appMode = useAppStore(state => state.appMode);
     const isDemoMode = appMode === 'demo';
 
@@ -176,14 +112,25 @@ const LiveCallInterface: React.FC = () => {
     useEffect(() => {
         isMobileRef.current = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     }, []);
-
+    
     useEffect(() => {
         transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [transcripts]);
 
-    const addTranscript = useCallback((speaker: TranscriptSpeaker, text: string, isFinal = false) => {
-        if (!text) return;
+    const addTranscript = useCallback((speaker: TranscriptSpeaker | 'finalize', text: string, isFinal = false) => {
+        if (speaker !== 'finalize' && !text) return;
         setTranscripts(prev => {
+            if (speaker === 'finalize') {
+                 if (prev.length > 0) {
+                    const last = prev[prev.length - 1];
+                    if (!last.isFinal) {
+                        const newTranscripts = [...prev];
+                        newTranscripts[prev.length - 1] = { ...last, isFinal: true };
+                        return newTranscripts;
+                    }
+                }
+                return prev;
+            }
             const last = prev[prev.length - 1];
             if (last && last.speaker === speaker && !last.isFinal) {
                 const newTranscripts = [...prev];
@@ -198,49 +145,44 @@ const LiveCallInterface: React.FC = () => {
     const handleFunctionCall = useCallback((fc) => {
         const details = `Args: ${JSON.stringify(fc.args)}`;
         addTranscript('system', `Function Call: ${fc.name}(${JSON.stringify(fc.args)})`, true);
-        addTimelineEvent({
-            type: 'function_call',
-            title: `Function: ${fc.name}`,
-            details,
-        });
+        addTimelineEvent({ type: 'function_call', title: `Function: ${fc.name}`, details, });
     }, [addTranscript, addTimelineEvent]);
 
-    const stopCall = useCallback((reason?: 'user' | 'duration_limit' | 'api_close' | 'error') => {
-        if (callState === 'idle') return;
-        
+    const stopCall = useCallback(() => {
         sessionPromiseRef.current?.then(session => session.close());
         processorRef.current?.disconnect();
         mediaStreamRef.current?.getTracks().forEach(track => track.stop());
-        audioContextRef.current?.close();
-
+        audioContextRef.current?.close().catch(() => {});
         sessionPromiseRef.current = null;
         processorRef.current = null;
         mediaStreamRef.current = null;
         audioContextRef.current = null;
-
-        if (reason === 'duration_limit') {
-            const message = `Call automatically ended after ${MAX_CALL_DURATION_SECONDS / 60} minutes to conserve resources.`;
-            addTranscript('system', message, true);
-            addTimelineEvent({
-                type: 'system_message',
-                title: 'Call Duration Limit Reached',
-                details: message,
-            });
+        if (componentIsMounted.current) {
+            setAnalyserNode(null);
+            setCallState('idle');
         }
+    }, []);
 
-        setAnalyserNode(null);
-        setCallState('idle');
-    }, [callState, addTranscript, addTimelineEvent]);
+    useEffect(() => {
+        componentIsMounted.current = true;
+        return () => {
+            componentIsMounted.current = false;
+            stopCall();
+        };
+    }, [stopCall]);
 
     useEffect(() => {
         let interval: number;
         if (callState === 'active') {
-            interval = setInterval(() => {
+            interval = window.setInterval(() => {
                 setTimer(t => {
                     const newTime = t + 1;
                     if (newTime >= MAX_CALL_DURATION_SECONDS) {
                         clearInterval(interval);
-                        stopCall('duration_limit');
+                        const message = `Call automatically ended after ${MAX_CALL_DURATION_SECONDS / 60} minutes to conserve resources.`;
+                        addTranscript('system', message, true);
+                        addTimelineEvent({ type: 'system_message', title: 'Call Duration Limit Reached', details: message });
+                        stopCall();
                         return MAX_CALL_DURATION_SECONDS;
                     }
                     return newTime;
@@ -248,108 +190,73 @@ const LiveCallInterface: React.FC = () => {
             }, 1000);
         }
         return () => clearInterval(interval);
-    }, [callState, stopCall]);
-
+    }, [callState, stopCall, addTranscript, addTimelineEvent]);
 
     const startCall = async () => {
-        setLauncherVisible(false); // Ensure launcher is closed
+        setLauncherVisible(false);
         if (isDemoMode) return;
         setCallState('connecting');
         setTranscripts([]);
         setTimer(0);
-        startStoreCall();
-
+        startLiveCall();
         try {
             mediaStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
-            // Fix: Cast window to `any` to allow access to the prefixed `webkitAudioContext` for broader browser compatibility without TypeScript errors.
             audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-            
             const source = audioContextRef.current.createMediaStreamSource(mediaStreamRef.current);
             const analyser = audioContextRef.current.createAnalyser();
             source.connect(analyser);
             setAnalyserNode(analyser);
-
             processorRef.current = audioContextRef.current.createScriptProcessor(4096, 1, 1);
             source.connect(processorRef.current);
             processorRef.current.connect(audioContextRef.current.destination);
-
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             
             sessionPromiseRef.current = ai.live.connect({
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
-                config: {
-                    responseModalities: [Modality.AUDIO],
-                    inputAudioTranscription: {},
-                    outputAudioTranscription: {},
-                    tools: [{ functionDeclarations }],
-                    systemInstruction: "You are an AI assistant providing instant, actionable support to a call center AGENT. Your primary role is to listen to the customer, understand their needs, and provide the AGENT with real-time guidance, information, and function calls to resolve the issue efficiently and according to compliance standards. Your transcribed responses are for the agent's eyes only."
-                },
+                config: { responseModalities: [Modality.AUDIO], inputAudioTranscription: {}, outputAudioTranscription: {}, tools: [{ functionDeclarations }], systemInstruction: "You are an AI assistant providing instant, actionable support to a call center AGENT. Your primary role is to listen to the customer, understand their needs, and provide the AGENT with real-time guidance, information, and function calls to resolve the issue efficiently and according to compliance standards. Your transcribed responses are for the agent's eyes only." },
                 callbacks: {
-                    onopen: () => {
-                        setCallState('active');
-                        addTranscript('system', 'Live session started. AI assistant is online.', true);
-                    },
+                    onopen: () => { if (componentIsMounted.current) { setCallState('active'); addTranscript('system', 'Live session started. AI assistant is online.', true); } },
                     onmessage: (msg: LiveServerMessage) => {
-                        if (msg.serverContent?.inputTranscription) {
-                            addTranscript('customer', msg.serverContent.inputTranscription.text, msg.serverContent.inputTranscription.isFinal);
-                        }
-                        if (msg.serverContent?.outputTranscription) {
-                             addTranscript('agent', msg.serverContent.outputTranscription.text, msg.serverContent.outputTranscription.isFinal);
-                        }
-                        if(msg.toolCall?.functionCalls) {
-                            msg.toolCall.functionCalls.forEach(handleFunctionCall);
-                        }
+                        if (!componentIsMounted.current) return;
+                        if (msg.serverContent?.inputTranscription) { addTranscript('customer', msg.serverContent.inputTranscription.text); }
+                        if (msg.serverContent?.outputTranscription) { addTranscript('agent', msg.serverContent.outputTranscription.text); }
+                        if (msg.serverContent?.turnComplete) { addTranscript('finalize', ''); }
+                        if(msg.toolCall?.functionCalls) { msg.toolCall.functionCalls.forEach(handleFunctionCall); }
                     },
-                    onclose: () => stopCall('api_close'),
+                    onclose: () => { if (componentIsMounted.current) stopCall(); },
                     onerror: (e) => {
+                        if (!componentIsMounted.current) return;
                         console.error(e);
                         setCallState('error');
                         const errorDetails = e instanceof ErrorEvent ? e.message : 'An unknown error occurred.';
                         addTranscript('system', `Connection error: ${errorDetails}`, true);
-                        addTimelineEvent({
-                           type: 'error',
-                           title: 'Live Connection Failed',
-                           details: errorDetails,
-                        });
-                        stopCall('error');
+                        addTimelineEvent({ type: 'error', title: 'Live Connection Failed', details: errorDetails });
+                        stopCall();
                     },
                 }
             });
 
             processorRef.current.onaudioprocess = (event) => {
+                if (!componentIsMounted.current) return;
                 const inputData = event.inputBuffer.getChannelData(0);
                 const l = inputData.length;
                 const int16 = new Int16Array(l);
-                for (let i = 0; i < l; i++) {
-                    int16[i] = inputData[i] * 32768;
-                }
+                for (let i = 0; i < l; i++) { int16[i] = inputData[i] * 32768; }
                 const base64 = encode(new Uint8Array(int16.buffer));
                 sessionPromiseRef.current?.then(session => session.sendRealtimeInput({ media: { data: base64, mimeType: 'audio/pcm;rate=16000' } }));
             };
-
         } catch (error) {
+            if (!componentIsMounted.current) return;
             console.error("Failed to start call:", error);
             const errorMessage = error instanceof Error ? error.message : 'Failed to get microphone access.';
             setCallState('error');
             addTranscript('system', `Error: ${errorMessage}`, true);
-            addTimelineEvent({
-                type: 'error',
-                title: 'Failed to Start Call',
-                details: errorMessage,
-            });
+            addTimelineEvent({ type: 'error', title: 'Failed to Start Call', details: errorMessage });
         }
     };
     
-    const handleStartCallClick = () => {
-        if (isMobileRef.current) {
-            setLauncherVisible(true);
-        } else {
-            startCall();
-        }
-    };
-    
+    const handleStartCallClick = () => { if (isMobileRef.current) { setLauncherVisible(true); } else { startCall(); } };
     const formatTime = (seconds: number) => new Date(seconds * 1000).toISOString().substr(14, 5);
-    
     const getSpeakerIcon = (speaker: TranscriptSpeaker) => {
         switch (speaker) {
             case 'customer': return <User size={20} className="text-blue-400" />;
@@ -357,49 +264,26 @@ const LiveCallInterface: React.FC = () => {
             default: return <AlertCircle size={20} className="text-icon-primary" />;
         }
     };
-
-    const cycleTextSize = () => {
-        setTextSize(currentSize => {
-            if (currentSize === 'sm') return 'base';
-            if (currentSize === 'base') return 'lg';
-            return 'sm';
-        });
-    };
-
+    const cycleTextSize = () => { setTextSize(currentSize => { if (currentSize === 'sm') return 'base'; if (currentSize === 'base') return 'lg'; return 'sm'; }); };
     const toggleFullScreen = () => {
-        const elem = transcriptContainerRef.current;
-        if (!elem) return;
-
-        if (!document.fullscreenElement) {
-            elem.requestFullscreen().catch(err => {
-                alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-            });
-        } else {
-            document.exitFullscreen();
-        }
+        const elem = transcriptContainerRef.current; if (!elem) return;
+        if (!document.fullscreenElement) { elem.requestFullscreen().catch(err => { alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`); }); } 
+        else { document.exitFullscreen(); }
     };
 
     useEffect(() => {
-        const handleFullScreenChange = () => {
-            setIsFullScreen(!!document.fullscreenElement);
-        };
+        const handleFullScreenChange = () => { setIsFullScreen(!!document.fullscreenElement); };
         document.addEventListener('fullscreenchange', handleFullScreenChange);
         return () => document.removeEventListener('fullscreenchange', handleFullScreenChange);
     }, []);
-
-    const textSizeClass = {
-        sm: 'text-sm',
-        base: 'text-base',
-        lg: 'text-lg',
-    }[textSize];
+    
+    const textSizeClass = { sm: 'text-sm', base: 'text-base', lg: 'text-lg' }[textSize];
 
     return (
         <>
             {isLauncherVisible && <CallLauncherModal onClose={() => setLauncherVisible(false)} onRecord={startCall} />}
             <div className="flex flex-col flex-1 bg-panel-background border border-border-color rounded-2xl h-full min-h-[500px] lg:p-6">
                 <div className="flex flex-col lg:flex-row flex-1 lg:gap-8 h-full">
-
-                    {/* Left Column: Controls & Visualizer (Desktop) */}
                     <div className="lg:w-1/3 flex flex-col p-6 lg:p-0">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
@@ -407,13 +291,7 @@ const LiveCallInterface: React.FC = () => {
                                 <span className="font-mono text-lg">{formatTime(timer)}</span>
                             </div>
                              <div ref={helpTooltipRef} className="relative">
-                                <button
-                                    onClick={() => setHelpTooltipVisible(p => !p)}
-                                    className="text-icon-primary hover:text-text-primary"
-                                    aria-label="How to use Co-Pilot"
-                                >
-                                    <Info size={24} />
-                                </button>
+                                <button onClick={() => setHelpTooltipVisible(p => !p)} className="text-icon-primary hover:text-text-primary" aria-label="How to use Co-Pilot"> <Info size={24} /> </button>
                                 {isHelpTooltipVisible && (
                                     <div className="absolute bottom-full right-0 mb-2 w-72 bg-primary-background border border-border-color rounded-xl shadow-2xl p-4 text-sm animate-fade-in z-10">
                                         <h4 className="font-bold text-text-primary mb-2">How to use Co-Pilot</h4>
@@ -426,14 +304,11 @@ const LiveCallInterface: React.FC = () => {
                                 )}
                             </div>
                         </div>
-
                         <div className="flex-1 flex flex-col items-center justify-center">
                             <button
-                                onClick={callState === 'active' ? () => stopCall('user') : handleStartCallClick}
+                                onClick={callState === 'active' ? stopCall : handleStartCallClick}
                                 disabled={isDemoMode || callState === 'connecting'}
-                                className={`relative flex items-center justify-center w-48 h-16 rounded-full font-semibold text-text-inverted transition-all duration-300 ${
-                                    callState === 'active' ? 'bg-red-500 hover:bg-red-600' : 'bg-accent-primary hover:bg-accent-primary-hover'
-                                } disabled:bg-gray-600 disabled:cursor-not-allowed`}
+                                className={`relative flex items-center justify-center w-48 h-16 rounded-full font-semibold text-text-inverted transition-all duration-300 ${ callState === 'active' ? 'bg-red-500 hover:bg-red-600' : 'bg-accent-primary hover:bg-accent-primary-hover' } disabled:bg-gray-600 disabled:cursor-not-allowed`}
                                 title={isDemoMode ? "Co-Pilot is disabled in Demo Mode" : ""}
                             >
                                 {callState === 'idle' && !isDemoMode && <div className="absolute inset-0 rounded-full bg-accent-primary animate-pulse"></div>}
@@ -443,30 +318,15 @@ const LiveCallInterface: React.FC = () => {
                                 </div>
                             </button>
                         </div>
-                        
                         <div className="mt-4">
                             <AudioVisualizer analyserNode={analyserNode} isActive={callState === 'active'} />
                         </div>
                     </div>
-
-                    {/* Right Column: Transcript (Desktop) / Main Content (Mobile) */}
                     <div className="relative flex-1 flex flex-col min-h-0 p-6 pt-0 lg:p-0">
                          <div ref={transcriptContainerRef} className="relative flex-1 bg-primary-background rounded-lg overflow-y-auto">
                             <div className="absolute top-2 right-2 z-10 flex items-center gap-1 bg-panel-background/50 backdrop-blur-sm p-1 rounded-md">
-                                <button
-                                    onClick={cycleTextSize}
-                                    className="p-2 text-icon-primary hover:text-text-primary hover:bg-interactive-background-hover rounded-md transition-colors"
-                                    aria-label="Cycle text size"
-                                >
-                                    <CaseSensitive size={18} />
-                                </button>
-                                <button
-                                    onClick={toggleFullScreen}
-                                    className="p-2 text-icon-primary hover:text-text-primary hover:bg-interactive-background-hover rounded-md transition-colors"
-                                    aria-label={isFullScreen ? "Exit full screen" : "Enter full screen"}
-                                >
-                                    {isFullScreen ? <Minimize size={18} /> : <Maximize size={18} />}
-                                </button>
+                                <button onClick={cycleTextSize} className="p-2 text-icon-primary hover:text-text-primary hover:bg-interactive-background-hover rounded-md transition-colors" aria-label="Cycle text size"> <CaseSensitive size={18} /> </button>
+                                <button onClick={toggleFullScreen} className="p-2 text-icon-primary hover:text-text-primary hover:bg-interactive-background-hover rounded-md transition-colors" aria-label={isFullScreen ? "Exit full screen" : "Enter full screen"}> {isFullScreen ? <Minimize size={18} /> : <Maximize size={18} />} </button>
                             </div>
                             <div className="p-4 space-y-4">
                                 {transcripts.map((t) => (
@@ -483,12 +343,7 @@ const LiveCallInterface: React.FC = () => {
                                 {callState === 'error' && (
                                     <div className="text-center p-4">
                                         <p className="text-red-400">An error occurred. Please check console and try again.</p>
-                                        <button 
-                                            onClick={() => window.location.hash = '/upload'}
-                                            className="mt-4 bg-interactive-background-hover text-text-primary py-2 px-4 rounded-lg font-semibold hover:bg-border-color"
-                                        >
-                                            Switch to Upload
-                                        </button>
+                                        <button onClick={() => window.location.hash = '/upload'} className="mt-4 bg-interactive-background-hover text-text-primary py-2 px-4 rounded-lg font-semibold hover:bg-border-color"> Switch to Upload </button>
                                     </div>
                                 )}
                                 <div ref={transcriptEndRef} />

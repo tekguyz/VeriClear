@@ -1,7 +1,6 @@
 
-
 import React, { useState, useEffect, useRef } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { BarChart, Headset, ListChecks, Settings, X, HelpCircle, User, LogOut, Plus, Sparkle, Upload, ChevronsLeft } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { Logomark } from './Logomark';
@@ -32,7 +31,6 @@ const UserPopupMenu: React.FC<{
 }> = ({ onClose, onActionClick }) => {
     const menuRef = useRef<HTMLDivElement>(null);
     useOnClickOutside(menuRef, onClose);
-    const { Link } = ReactRouterDOM;
 
     useEffect(() => {
         const handleEsc = (event: KeyboardEvent) => {
@@ -67,7 +65,6 @@ const NewAuditMenu: React.FC<{
 }> = ({ onClose, onLinkClick }) => {
     const menuRef = useRef<HTMLDivElement>(null);
     useOnClickOutside(menuRef, onClose);
-    const { Link } = ReactRouterDOM;
 
     useEffect(() => {
         const handleEsc = (event: KeyboardEvent) => {
@@ -119,8 +116,6 @@ const navItems = [
 ];
 
 const NavItem: React.FC<{ item: { to: string; icon: React.ElementType; label: string; }; onClick: () => void; }> = ({ item, onClick }) => {
-    const { NavLink } = ReactRouterDOM;
-    
     return (
         <li>
             <NavLink

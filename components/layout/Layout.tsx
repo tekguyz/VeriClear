@@ -1,7 +1,6 @@
 
-
 import React, { useState, useEffect } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Info, ArrowLeft, ChevronsLeft, ChevronsRight, Menu, X } from 'lucide-react';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
@@ -33,7 +32,6 @@ const Layout: React.FC = () => {
   const rightPanelWidth = useAppStore((state) => state.rightPanelWidth);
   const appMode = useAppStore((state) => state.appMode);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const { Outlet, useLocation, useNavigate } = ReactRouterDOM;
   const location = useLocation();
   const navigate = useNavigate();
 

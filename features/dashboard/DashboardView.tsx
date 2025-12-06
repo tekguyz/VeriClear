@@ -1,9 +1,10 @@
 
-
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TrendingUp, TrendingDown, Minus, CheckCircle, Smile, UserCheck, BarChart, LineChart } from 'lucide-react';
 import type { AnalyticsMetrics, MetricCardData } from '../../types';
 import InfoPopover from '../../components/common/InfoPopover';
+import { useAppStore } from '../../store/appStore';
 
 const MetricCard: React.FC<{ data: MetricCardData; icon: React.ElementType, children?: React.ReactNode }> = ({ data, icon: Icon, children }) => {
   const TrendIcon = data.changeType === 'increase' ? TrendingUp : data.changeType === 'decrease' ? TrendingDown : Minus;
@@ -63,67 +64,113 @@ const ChartPlaceholder: React.FC<{ title: string; icon: React.ElementType }> = (
     </div>
 );
 
-const AnalyticsView: React.FC = () => {
-    const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(null);
-    const [loading, setLoading] = useState(true);
+const DashboardContent: React.FC<{ metrics: AnalyticsMetrics }> = ({ metrics }) => {
+    const navigate = useNavigate();
+    return (
+      <div className="animate-fade-in">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
+            <div role="button" className="cursor-pointer card-glow rounded-2xl" onClick={() => navigate('/reviews')} title="View all reviews">
+              <MetricCard data={metrics.totalCalls} icon={BarChart} />
+            </div>
+            <MetricCard data={metrics.complianceRate} icon={CheckCircle}>
+              <InfoPopover content="The percentage of reviews that passed all quality and script checks." />
+            </MetricCard>
+            <MetricCard data={metrics.averageSentiment} icon={Smile} />
+            <MetricCard data={metrics.agentPerformance} icon={UserCheck} />
+        </div>
+  
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ChartPlaceholder title="Call Volume Over Time" icon={LineChart} />
+            <ChartPlaceholder title="Pass Rate Trends" icon={BarChart} />
+        </div>
+      </div>
+    );
+};
+
+const AnalyticsViewAppMode: React.FC = () => {
+    const [liveMetrics, setLiveMetrics] = useState<AnalyticsMetrics | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        let isMounted = true;
         const fetchMetrics = async () => {
+            if (!isMounted) return;
             try {
                 const response = await fetch('/.netlify/functions/getDashboardMetrics');
                 if (!response.ok) {
                     throw new Error(`Failed to fetch dashboard metrics. Status: ${response.status}`);
                 }
                 const data: AnalyticsMetrics = await response.json();
-                setMetrics(data);
-                setError(null);
+                if (isMounted) {
+                    setLiveMetrics(data);
+                    setError(null);
+                }
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+                if (isMounted) {
+                    setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+                }
             } finally {
-                setLoading(false);
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
         };
 
+        setLoading(true);
         fetchMetrics();
-        const intervalId = setInterval(fetchMetrics, 30000); // Poll every 30 seconds
+        const intervalId = setInterval(fetchMetrics, 30000);
 
-        return () => clearInterval(intervalId);
+        return () => {
+            isMounted = false;
+            clearInterval(intervalId);
+        };
     }, []);
 
-  if (loading) {
-    return (
-        <div className="flex justify-center items-center h-full">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-accent-primary"></div>
-        </div>
-    );
-  }
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-full">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-accent-primary"></div>
+            </div>
+        );
+    }
 
-  if (error) {
-    return <div className="text-center text-red-400">Error: {error}</div>;
-  }
-  
-  if (!metrics) {
-    return <div className="text-center text-gray-400">No dashboard data available.</div>;
-  }
+    if (error) {
+        return <div className="text-center text-red-400">Error: {error}</div>;
+    }
+    
+    if (!liveMetrics) {
+        return <div className="text-center text-gray-400">No dashboard data available.</div>;
+    }
 
-  return (
-    <div className="animate-fade-in">
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
-          <MetricCard data={metrics.totalCalls} icon={BarChart} />
-          <MetricCard data={metrics.complianceRate} icon={CheckCircle}>
-            <InfoPopover content="The percentage of reviews that passed all quality and script checks." />
-          </MetricCard>
-          <MetricCard data={metrics.averageSentiment} icon={Smile} />
-          <MetricCard data={metrics.agentPerformance} icon={UserCheck} />
-      </div>
+    return <DashboardContent metrics={liveMetrics} />;
+};
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartPlaceholder title="Call Volume Over Time" icon={LineChart} />
-          <ChartPlaceholder title="Pass Rate Trends" icon={BarChart} />
-      </div>
-    </div>
-  );
+
+const AnalyticsViewDemoMode: React.FC = () => {
+    const metrics = useAppStore(state => state.analyticsMetrics);
+
+    if (!metrics) {
+        return (
+            <div className="flex justify-center items-center h-full">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-accent-primary"></div>
+                <p className="ml-4">Loading Demo Data...</p>
+            </div>
+        );
+    }
+
+    return <DashboardContent metrics={metrics} />;
+};
+
+const AnalyticsView: React.FC = () => {
+    const appMode = useAppStore(state => state.appMode);
+
+    if (appMode === 'demo') {
+        return <AnalyticsViewDemoMode />;
+    }
+    
+    // Default to app mode for safety, although appMode should never be null here.
+    return <AnalyticsViewAppMode />;
 };
 
 export default AnalyticsView;

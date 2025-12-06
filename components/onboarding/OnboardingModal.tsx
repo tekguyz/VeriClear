@@ -1,4 +1,6 @@
-import * as React from 'react';
+
+
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Headset, ListChecks, BarChart, Smartphone, Puzzle, Zap } from 'lucide-react';
 import { Logomark } from '../layout/Logomark';
 
@@ -74,26 +76,25 @@ interface OnboardingModalProps {
 }
 
 const OnboardingModal: React.FC<OnboardingModalProps> = ({ onClose }) => {
-  // Fix: Destructured React imports were causing type inference issues with hooks (e.g., generics on useState).
-  // Switched to a namespace import ('* as React') to ensure correct type resolution.
-  const [openAccordion, setOpenAccordion] = React.useState<string>('live-copilot');
-  const modalRef = React.useRef<HTMLDivElement>(null);
-  const mobileModalRef = React.useRef<HTMLDivElement>(null);
+  const [openAccordion, setOpenAccordion] = useState<string>('live-copilot');
+  const modalRef = useRef<HTMLDivElement>(null);
+  const mobileModalRef = useRef<HTMLDivElement>(null);
 
   const toggleAccordion = (id: string) => {
     setOpenAccordion(openAccordion === id ? '' : id);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     const isMobile = window.innerWidth < 768;
     const activeModalRef = isMobile ? mobileModalRef : modalRef;
     
     const modalElement = activeModalRef.current;
     if (!modalElement) return;
 
-    const focusableElements = modalElement.querySelectorAll<HTMLElement>(
+    // Fix: Cast the result of querySelectorAll to NodeListOf<HTMLElement> to resolve the generic type argument error.
+    const focusableElements = modalElement.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
+    ) as NodeListOf<HTMLElement>;
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
     

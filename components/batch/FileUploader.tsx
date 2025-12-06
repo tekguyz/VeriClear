@@ -1,6 +1,8 @@
 
-import React, { useState, useCallback } from 'react';
-import { UploadCloud, FileText, X, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { UploadCloud, FileText, X, Loader2, CheckCircle, AlertTriangle, ListChecks, RotateCcw } from 'lucide-react';
 import type { UploadedFile } from '../../types';
 import { useAppStore } from '../../store/appStore';
 
@@ -23,8 +25,18 @@ interface FileUploaderProps {
 const FileUploader: React.FC<FileUploaderProps> = ({ onProgressUpdate, onAnalysisComplete, onAnalysisError }) => {
     const [files, setFiles] = useState<UploadedFile[]>([]);
     const [isDragging, setIsDragging] = useState(false);
+    const [isComplete, setIsComplete] = useState(false);
     const appMode = useAppStore(state => state.appMode);
     const isDemoMode = appMode === 'demo';
+    const navigate = useNavigate();
+    const componentIsMounted = useRef(true);
+
+    useEffect(() => {
+        componentIsMounted.current = true;
+        return () => {
+            componentIsMounted.current = false;
+        };
+    }, []);
 
     const processFiles = (fileList: FileList) => {
         if (isDemoMode) return;
@@ -47,6 +59,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onProgressUpdate, onAnalysi
         if (event.dataTransfer.files) {
             processFiles(event.dataTransfer.files);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isDemoMode]);
 
     const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
@@ -75,17 +88,26 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onProgressUpdate, onAnalysi
     const startAnalysis = async () => {
         if (isDemoMode || files.some(f => f.status === 'uploading' || f.status === 'analyzing')) return;
 
+        if (!componentIsMounted.current) return;
         onProgressUpdate(0); // Reset stepper
 
         for (let i = 0; i < files.length; i++) {
             const currentFile = files[i];
             
             // Step 1: Uploading
+            if (!componentIsMounted.current) return;
             setFiles(prev => prev.map(f => f.file.name === currentFile.file.name ? { ...f, status: 'uploading' } : f));
+            
+            if (!componentIsMounted.current) return;
             onProgressUpdate(1);
+
             // Mock upload to Netlify Blobs
             await new Promise(resolve => {
                 const interval = setInterval(() => {
+                    if (!componentIsMounted.current) {
+                        clearInterval(interval);
+                        return;
+                    }
                     setFiles(prev => prev.map(f => {
                         if (f.file.name === currentFile.file.name) {
                             const newProgress = f.progress + 20;
@@ -101,8 +123,12 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onProgressUpdate, onAnalysi
                 }, 200);
             });
             
+            if (!componentIsMounted.current) return;
+
             // Step 2: Analyzing
             setFiles(prev => prev.map(f => f.file.name === currentFile.file.name ? { ...f, status: 'analyzing' } : f));
+            
+            if (!componentIsMounted.current) return;
             onProgressUpdate(2);
 
             try {
@@ -113,6 +139,8 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onProgressUpdate, onAnalysi
                     body: JSON.stringify({ filename: currentFile.file.name }),
                 });
 
+                if (!componentIsMounted.current) return;
+
                 if (!response.ok) {
                     throw new Error('Analysis failed');
                 }
@@ -122,18 +150,32 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onProgressUpdate, onAnalysi
 
                 // Steps 3 & 4 are backend, we just mark as completed
                 onProgressUpdate(3); // Function Calling
+                if (!componentIsMounted.current) return;
                 onProgressUpdate(4); // Storing
 
+                if (!componentIsMounted.current) return;
                 setFiles(prev => prev.map(f => f.file.name === currentFile.file.name ? { ...f, status: 'completed' } : f));
 
             } catch (error) {
+                if (!componentIsMounted.current) return;
                 console.error(error);
                 setFiles(prev => prev.map(f => f.file.name === currentFile.file.name ? { ...f, status: 'failed', error: 'Analysis failed' } : f));
                 onAnalysisError();
                 return; // Stop processing on first error
             }
         }
+        
+        if (!componentIsMounted.current) return;
         onAnalysisComplete();
+
+        if (!componentIsMounted.current) return;
+        setIsComplete(true);
+    };
+
+    const handleReset = () => {
+        setFiles([]);
+        setIsComplete(false);
+        onProgressUpdate(0);
     };
 
     const renderFileStatusIcon = (status: UploadedFile['status']) => {
@@ -149,6 +191,34 @@ const FileUploader: React.FC<FileUploaderProps> = ({ onProgressUpdate, onAnalysi
                 return <FileText className="text-icon-primary" size={20} />;
         }
     };
+    
+    if (isComplete) {
+        return (
+            <div className="bg-panel-background border border-border-color rounded-2xl p-8 text-center animate-fade-in">
+                <div className="flex justify-center mb-4">
+                    <CheckCircle className="text-green-500" size={48} />
+                </div>
+                <h3 className="text-xl font-semibold text-text-primary">Analysis Complete</h3>
+                <p className="text-sm text-text-secondary mt-1 mb-6">Your files have been processed successfully.</p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                        onClick={() => navigate('/reviews')}
+                        className="w-full flex items-center justify-center gap-2 bg-accent-primary text-text-inverted py-2.5 rounded-lg font-semibold hover:bg-accent-primary-hover"
+                    >
+                        <ListChecks size={16} />
+                        View Reviews
+                    </button>
+                    <button
+                        onClick={handleReset}
+                        className="w-full flex items-center justify-center gap-2 bg-interactive-background-hover text-text-primary py-2.5 rounded-lg font-semibold hover:bg-border-color"
+                    >
+                        <RotateCcw size={16} />
+                        Start New Upload
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-panel-background border border-border-color rounded-2xl p-6">

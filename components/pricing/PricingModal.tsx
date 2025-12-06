@@ -1,4 +1,5 @@
 
+
 import React, { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
@@ -12,9 +13,10 @@ const PricingModal: React.FC = () => {
         const modalElement = modalRef.current;
         if (!modalElement) return;
 
-        const focusableElements = modalElement.querySelectorAll<HTMLElement>(
+        // Fix: Cast the result of querySelectorAll to NodeListOf<HTMLElement> to resolve potential generic type argument errors.
+        const focusableElements = modalElement.querySelectorAll(
             'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
+        ) as NodeListOf<HTMLElement>;
         const firstElement = focusableElements[0];
         const lastElement = focusableElements[focusableElements.length - 1];
 

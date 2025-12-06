@@ -1,10 +1,8 @@
 
 import React from 'react';
-// Fix: Use namespace import for react-router-dom to resolve export issues.
-import * as ReactRouterDOM from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
-  const { Link } = ReactRouterDOM;
   return (
     <footer className="w-full text-center py-6 text-xs text-gray-500">
       <div className="flex justify-center gap-4 mb-2">
