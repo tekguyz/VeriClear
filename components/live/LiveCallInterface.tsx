@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Mic, PhoneOff, Bot, User, AlertCircle, Phone, Video, X, Info, CaseSensitive, Maximize, Minimize } from 'lucide-react';
+import { Mic, PhoneOff, Bot, User, AlertCircle, Phone, Video, X, Info, CaseSensitive, Maximize, Minimize, ScreenShare } from 'lucide-react';
 import { GoogleGenAI, FunctionDeclaration, Type, Modality, LiveServerMessage } from '@google/genai';
 import type { TranscriptSegment, TranscriptSpeaker } from '../../types';
 import { useAppStore } from '../../store/appStore';
@@ -42,7 +42,13 @@ const functionDeclarations: FunctionDeclaration[] = [
     { name: 'customer_data_retrieve', description: "Retrieve customer details from the CRM.", parameters: { type: Type.OBJECT, properties: { customerId: { type: Type.STRING, description: "The customer's ID." } }, required: ["customerId"] } }
 ];
 
-const CallLauncherModal: React.FC<{ onClose: () => void; onRecord: () => void; }> = ({ onClose, onRecord }) => {
+interface CallLauncherModalProps {
+    onClose: () => void;
+    onRecordMic: () => void;
+    onRecordMeeting: () => void;
+}
+
+const CallLauncherModal: React.FC<CallLauncherModalProps> = ({ onClose, onRecordMic, onRecordMeeting }) => {
     const modalRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         const modalElement = modalRef.current;
@@ -67,15 +73,26 @@ const CallLauncherModal: React.FC<{ onClose: () => void; onRecord: () => void; }
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
             <div ref={modalRef} className="relative w-full max-w-sm bg-panel-background border border-border-color rounded-2xl shadow-2xl p-6 text-center" role="dialog" aria-modal="true" aria-labelledby="launcher-title">
                 <h2 id="launcher-title" className="text-xl font-bold mb-2">Start a Session</h2>
-                <p className="text-sm text-text-secondary mb-6">First, start your conversation in another app, then begin recording here.</p>
+                <p className="text-sm text-text-secondary mb-6">Choose how you want to capture the audio for analysis.</p>
                 <div className="space-y-3">
-                    <a href="tel:" className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-interactive-background-hover text-text-primary text-md font-semibold rounded-lg hover:bg-border-color transition-colors"> <Phone size={20} /> Start a Phone Call </a>
-                    <a href="zoommtg://" className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-interactive-background-hover text-text-primary text-md font-semibold rounded-lg hover:bg-border-color transition-colors"> <Video size={20} /> Open Zoom </a>
-                    <a href="gmeet://" className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-interactive-background-hover text-text-primary text-md font-semibold rounded-lg hover:bg-border-color transition-colors"> <Video size={20} /> Open Google Meet </a>
-                    <hr className="border-border-color" />
-                    <button onClick={onRecord} className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-accent-primary text-text-inverted text-md font-semibold rounded-lg hover:bg-accent-primary-hover transition-colors"> <Mic size={20} /> Just Record Audio </button>
+                     <button onClick={onRecordMeeting} className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-interactive-background-hover text-text-primary text-md font-semibold rounded-lg hover:bg-border-color transition-colors border border-accent-primary/20"> 
+                        <ScreenShare size={20} className="text-accent-primary"/> 
+                        <div className="text-left">
+                            <span className="block text-sm font-bold">Connect to Meeting</span>
+                            <span className="block text-xs text-text-secondary">Captures Google Meet/Zoom tab audio + Mic</span>
+                        </div>
+                    </button>
+                    <button onClick={onRecordMic} className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-accent-primary text-text-inverted text-md font-semibold rounded-lg hover:bg-accent-primary-hover transition-colors"> 
+                        <Mic size={20} /> 
+                        <div className="text-left">
+                            <span className="block text-sm font-bold">Microphone Only</span>
+                            <span className="block text-xs text-white/80">Best for speakerphone or in-person</span>
+                        </div>
+                    </button>
                 </div>
-                <div className="mt-6 text-xs text-text-secondary bg-primary-background p-3 rounded-lg"> <strong>Important:</strong> This app must remain open and in the foreground for the Co-Pilot to function correctly. </div>
+                <div className="mt-6 text-xs text-text-secondary bg-primary-background p-3 rounded-lg"> 
+                    <strong>Tip for Meetings:</strong> When prompted, select the specific browser tab your meeting is in and ensure "Share tab audio" is checked.
+                </div>
                 <button onClick={onClose} className="absolute top-4 right-4 text-text-secondary hover:text-text-primary" aria-label="Close"> <X size={24} /> </button>
             </div>
         </div>
@@ -192,7 +209,7 @@ const LiveCallInterface: React.FC = () => {
         return () => clearInterval(interval);
     }, [callState, stopCall, addTranscript, addTimelineEvent]);
 
-    const startCall = async () => {
+    const startCall = async (mode: 'mic' | 'meeting') => {
         setLauncherVisible(false);
         if (isDemoMode) return;
         setCallState('connecting');
@@ -200,20 +217,66 @@ const LiveCallInterface: React.FC = () => {
         setTimer(0);
         startLiveCall();
         try {
-            mediaStreamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
-            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-            const source = audioContextRef.current.createMediaStreamSource(mediaStreamRef.current);
-            const analyser = audioContextRef.current.createAnalyser();
+            let source: MediaStreamAudioSourceNode;
+            let audioContext: AudioContext;
+
+            if (mode === 'meeting') {
+                // Meeting Mode: Capture System Audio (Meet) + Mic
+                const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // @ts-ignore - getDisplayMedia exists in modern browsers
+                const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+                
+                // We only need the audio track from the display stream
+                // Check if user actually shared audio
+                const displayAudioTracks = displayStream.getAudioTracks();
+                if (displayAudioTracks.length === 0) {
+                     throw new Error("No tab audio shared. Please ensure 'Share tab audio' is checked.");
+                }
+
+                audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
+                
+                // Create sources
+                const micSource = audioContext.createMediaStreamSource(micStream);
+                const systemSource = audioContext.createMediaStreamSource(displayStream);
+                const destination = audioContext.createMediaStreamDestination();
+                
+                // Mix them
+                micSource.connect(destination);
+                systemSource.connect(destination);
+                
+                source = audioContext.createMediaStreamSource(destination.stream);
+                
+                // Store tracks to stop later
+                mediaStreamRef.current = new MediaStream([...micStream.getTracks(), ...displayStream.getTracks()]);
+            } else {
+                // Mic Only Mode
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaStreamRef.current = stream;
+                audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
+                source = audioContext.createMediaStreamSource(stream);
+            }
+            
+            audioContextRef.current = audioContext;
+            
+            const analyser = audioContext.createAnalyser();
             source.connect(analyser);
             setAnalyserNode(analyser);
-            processorRef.current = audioContextRef.current.createScriptProcessor(4096, 1, 1);
+            
+            processorRef.current = audioContext.createScriptProcessor(4096, 1, 1);
             source.connect(processorRef.current);
-            processorRef.current.connect(audioContextRef.current.destination);
+            processorRef.current.connect(audioContext.destination);
+
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             
             sessionPromiseRef.current = ai.live.connect({
                 model: 'gemini-2.5-flash-native-audio-preview-09-2025',
-                config: { responseModalities: [Modality.AUDIO], inputAudioTranscription: {}, outputAudioTranscription: {}, tools: [{ functionDeclarations }], systemInstruction: "You are an AI assistant providing instant, actionable support to a call center AGENT. Your primary role is to listen to the customer, understand their needs, and provide the AGENT with real-time guidance, information, and function calls to resolve the issue efficiently and according to compliance standards. Your transcribed responses are for the agent's eyes only." },
+                config: { 
+                    responseModalities: [Modality.AUDIO], 
+                    inputAudioTranscription: {}, 
+                    outputAudioTranscription: {}, 
+                    tools: [{ functionDeclarations }], 
+                    systemInstruction: "You are an AI assistant providing instant, actionable support to a call center AGENT. Your primary role is to listen to the customer, understand their needs, and provide the AGENT with real-time guidance, information, and function calls to resolve the issue efficiently and according to compliance standards. Your transcribed responses are for the agent's eyes only." 
+                },
                 callbacks: {
                     onopen: () => { if (componentIsMounted.current) { setCallState('active'); addTranscript('system', 'Live session started. AI assistant is online.', true); } },
                     onmessage: (msg: LiveServerMessage) => {
@@ -248,14 +311,14 @@ const LiveCallInterface: React.FC = () => {
         } catch (error) {
             if (!componentIsMounted.current) return;
             console.error("Failed to start call:", error);
-            const errorMessage = error instanceof Error ? error.message : 'Failed to get microphone access.';
+            const errorMessage = error instanceof Error ? error.message : 'Failed to get microphone or tab access.';
             setCallState('error');
             addTranscript('system', `Error: ${errorMessage}`, true);
             addTimelineEvent({ type: 'error', title: 'Failed to Start Call', details: errorMessage });
         }
     };
     
-    const handleStartCallClick = () => { if (isMobileRef.current) { setLauncherVisible(true); } else { startCall(); } };
+    const handleStartCallClick = () => setLauncherVisible(true);
     const formatTime = (seconds: number) => new Date(seconds * 1000).toISOString().substr(14, 5);
     const getSpeakerIcon = (speaker: TranscriptSpeaker) => {
         switch (speaker) {
@@ -281,7 +344,7 @@ const LiveCallInterface: React.FC = () => {
 
     return (
         <>
-            {isLauncherVisible && <CallLauncherModal onClose={() => setLauncherVisible(false)} onRecord={startCall} />}
+            {isLauncherVisible && <CallLauncherModal onClose={() => setLauncherVisible(false)} onRecordMic={() => startCall('mic')} onRecordMeeting={() => startCall('meeting')} />}
             <div className="flex flex-col flex-1 bg-panel-background border border-border-color rounded-2xl h-full min-h-[500px] lg:p-6">
                 <div className="flex flex-col lg:flex-row flex-1 lg:gap-8 h-full">
                     <div className="lg:w-1/3 flex flex-col p-6 lg:p-0">
@@ -296,9 +359,9 @@ const LiveCallInterface: React.FC = () => {
                                     <div className="absolute bottom-full right-0 mb-2 w-72 bg-primary-background border border-border-color rounded-xl shadow-2xl p-4 text-sm animate-fade-in z-10">
                                         <h4 className="font-bold text-text-primary mb-2">How to use Co-Pilot</h4>
                                         <ul className="list-disc list-inside space-y-2 text-text-secondary">
-                                            <li>First, start your call in another app (Phone, Zoom, etc.) on speakerphone.</li>
-                                            <li>Return here and tap "Start Call" to begin analysis.</li>
-                                            <li>For best results, this app must remain open and in the foreground.</li>
+                                            <li><strong>Meeting Mode:</strong> Connects to Google Meet or Zoom tab audio to hear your friend/customer.</li>
+                                            <li><strong>Mic Only:</strong> Standard recording for speakerphone or in-person.</li>
+                                            <li>Ensure the app remains open for uninterrupted analysis.</li>
                                         </ul>
                                     </div>
                                 )}
