@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { X, CreditCard, Calendar, Lock, Users, Loader2, Check, User, Mail } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
@@ -5,7 +6,7 @@ import { useAppStore } from '../../store/appStore';
 type PaymentStatus = 'idle' | 'loading' | 'success';
 
 const PaymentModal: React.FC = () => {
-    const { closePaymentModal } = useAppStore(state => ({ closePaymentModal: state.closePaymentModal }));
+    const closePaymentModal = useAppStore(state => state.closePaymentModal);
     const [seats, setSeats] = useState(1);
     const [status, setStatus] = useState<PaymentStatus>('idle');
     const modalRef = useRef<HTMLDivElement>(null);
@@ -52,7 +53,6 @@ const PaymentModal: React.FC = () => {
             }
         };
         
-        // Fix: Cast the result of querySelectorAll to NodeListOf<HTMLElement> to resolve potential generic type argument errors.
         const focusableElements = modalElement.querySelectorAll(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         ) as NodeListOf<HTMLElement>;
@@ -192,9 +192,9 @@ const PaymentModal: React.FC = () => {
                         form="payment-form"
                         disabled={status !== 'idle'}
                         className={`w-full h-12 flex items-center justify-center font-semibold rounded-lg transition-colors text-text-inverted
-                            ${status === 'idle' && 'bg-accent-primary hover:bg-accent-primary-hover'}
-                            ${status === 'loading' && 'bg-gray-600 cursor-wait'}
-                            ${status === 'success' && 'bg-green-500'}
+                            ${status === 'idle' ? 'bg-accent-primary hover:bg-accent-primary-hover' : ''}
+                            ${status === 'loading' ? 'bg-gray-600 cursor-wait' : ''}
+                            ${status === 'success' ? 'bg-green-500' : ''}
                         `}
                     >
                         {renderButtonContent()}
