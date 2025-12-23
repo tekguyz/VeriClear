@@ -114,7 +114,7 @@ const EntryView: React.FC = () => {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">Made Crystal Clear</span>
           </h1>
           
-          <p className="text-lg lg:text-xl text-gray-500 dark:text-gray-400 mb-10 max-w-xl">
+          <p className="text-lg lg:text-xl text-text-secondary mb-10 max-w-xl">
             VeriClear listens to your customer calls, spots compliance risks in real-time, and gives you actionable insights to improve performance instantly.
           </p>
           
@@ -189,7 +189,7 @@ const EntryView: React.FC = () => {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
              <h2 className="text-4xl font-bold mb-4">One Platform, Every Feature</h2>
-             <p className="text-xl text-gray-400 max-w-2xl mx-auto">From real-time assistance to in-depth analytics, here's everything VeriClear can do for your team.</p>
+             <p className="text-xl text-text-secondary max-w-2xl mx-auto">From real-time assistance to in-depth analytics, here's everything VeriClear can do for your team.</p>
           </div>
          
           <div className="bg-panel-background border border-border-color rounded-3xl shadow-2xl overflow-hidden">
@@ -209,7 +209,7 @@ const EntryView: React.FC = () => {
       <section className="py-24 px-8 bg-primary-background">
           <div className="max-w-4xl mx-auto">
               <h2 className="text-4xl font-bold text-center mb-4">Choose Your Plan</h2>
-              <p className="text-center text-gray-400 mb-12 text-lg">Start for free, scale as you grow.</p>
+              <p className="text-center text-text-secondary mb-12 text-lg">Start for free, scale as you grow.</p>
               <PricingTable source="landing" />
           </div>
       </section>

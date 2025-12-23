@@ -60,24 +60,24 @@ const PricingTable: React.FC<PricingTableProps> = ({ source }) => {
                             <span className="bg-accent-primary text-white text-xs font-semibold px-4 py-1 rounded-full uppercase">Most Popular</span>
                         </div>
                     )}
-                    <h3 className="text-2xl font-semibold">{plan.name}</h3>
-                    <p className="text-gray-400 mt-2 mb-6 h-10">{plan.description}</p>
+                    <h3 className="text-2xl font-semibold text-text-primary">{plan.name}</h3>
+                    <p className="text-text-secondary mt-2 mb-6 h-10">{plan.description}</p>
                     <div className="flex items-baseline mb-6">
-                        <span className="text-5xl font-bold">{plan.price}</span>
-                        {plan.name === 'Pro' && <span className="text-gray-400 ml-2">/ user / month</span>}
-                        {plan.name === 'Free' && <span className="text-gray-400 ml-2">/ month</span>}
+                        <span className="text-5xl font-bold text-text-primary">{plan.price}</span>
+                        {plan.name === 'Pro' && <span className="text-text-secondary ml-2">/ user / month</span>}
+                        {plan.name === 'Free' && <span className="text-text-secondary ml-2">/ month</span>}
                     </div>
                     <ul className="space-y-4 mb-8 flex-1">
                         {plan.features.map(feature => (
                             <li key={feature} className="flex items-center">
                                 <Check className="text-green-500 mr-3 flex-shrink-0" size={20} />
-                                <span className="text-gray-300">{feature}</span>
+                                <span className="text-text-primary font-medium">{feature}</span>
                             </li>
                         ))}
                     </ul>
                     <button 
                         onClick={() => handleCTAClick(plan.name)}
-                        className={`w-full py-3 rounded-lg font-semibold transition-colors ${plan.popular ? 'bg-accent-primary text-white hover:bg-blue-600' : 'bg-gray-700 text-white hover:bg-gray-600'}`}>
+                        className={`w-full py-3 rounded-lg font-semibold transition-colors ${plan.popular ? 'bg-accent-primary text-white hover:bg-accent-primary-hover shadow-lg' : 'bg-interactive-background-hover text-text-primary hover:bg-border-color'}`}>
                         {plan.cta}
                     </button>
                 </div>

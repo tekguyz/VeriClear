@@ -8,28 +8,10 @@
     <!-- Primary Meta Tags -->
     <title>VeriClear | AI-Powered Call Center Coaching & Compliance</title>
     <meta name="title" content="VeriClear | AI-Powered Call Center Coaching & Compliance" />
-    <meta name="description" content="Transform your customer support with VeriClear. Real-time AI coaching, automated compliance auditing, and detailed call analytics powered by Gemini 1.5 Pro." />
-    <meta name="keywords" content="AI coaching, contact center AI, real-time transcription, compliance audit, Gemini API, automated QA, sales coaching, call analysis" />
-    <meta name="author" content="VeriClear Team" />
+    <meta name="description" content="Transform your customer support with VeriClear. Real-time AI coaching, automated compliance auditing, and detailed call analytics." />
     <meta name="theme-color" content="#4285F4" />
-    <meta name="application-name" content="VeriClear" />
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://vericlear.ai/" />
-    <meta property="og:title" content="VeriClear | AI-Powered Call Center Coaching & Compliance" />
-    <meta property="og:description" content="Transform your customer support with VeriClear. Real-time AI coaching, automated compliance auditing, and detailed call analytics." />
-    <meta property="og:image" content="https://storage.googleapis.com/aistudio-hosting/generative-ai-studio/gallery/vericlear-screenshot.png" />
-    <meta property="og:site_name" content="VeriClear" />
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://vericlear.ai/" />
-    <meta property="twitter:title" content="VeriClear | AI-Powered Call Center Coaching & Compliance" />
-    <meta property="twitter:description" content="Transform your customer support with VeriClear. Real-time AI coaching, automated compliance auditing, and detailed call analytics." />
-    <meta property="twitter:image" content="https://storage.googleapis.com/aistudio-hosting/generative-ai-studio/gallery/vericlear-screenshot.png" />
-
-    <!-- Favicon (Updated Hexagon Wave Check) -->
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%234285F4'/%3E%3Cstop offset='50%25' stop-color='%239B72CB'/%3E%3Cstop offset='100%25' stop-color='%23D96570'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M20 2L35.5 11V29L20 38L4.5 29V11L20 2Z' stroke='url(%23g)' stroke-width='2.5' fill='none'/%3E%3Crect x='11' y='14' width='3' height='12' rx='1.5' fill='%2352525b'/%3E%3Crect x='16' y='18' width='3' height='8' rx='1.5' fill='%2352525b'/%3E%3Cpath d='M21 22L24 25L30 15' stroke='url(%23g)' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E" />
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -38,35 +20,29 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
       :root {
-        /* Backgrounds */
-        --color-primary-background: #e4e4e7; /* zinc-200 */
+        /* Light Mode - Maximum Contrast */
+        --color-primary-background: #f4f4f5;
         --color-panel-background: #ffffff;
-        --color-interactive-background-hover: #f4f4f5; /* zinc-100 */
-        --color-input-background: #e4e4e7; /* zinc-200 */
+        --color-interactive-background-hover: #e4e4e7;
+        --color-input-background: #ffffff;
         --color-accent-background: #4285F4;
         --color-accent-background-hover: #3367D6;
-        --color-subtle-background: #f4f4f5; /* zinc-100 */
+        --color-subtle-background: #f8fafc;
 
-        /* Text */
-        --color-text-primary: #18181b; /* zinc-900 */
-        --color-text-secondary: #52525b; /* zinc-600 */
-        --color-text-accent: #4285F4;
+        --color-text-primary: #09090b; /* Zinc-950 */
+        --color-text-secondary: #27272a; /* Zinc-800 - Significant contrast improvement */
+        --color-text-accent: #2563eb;
         --color-text-inverted: #ffffff;
-        --color-text-placeholder: #71717a; /* zinc-500 */
+        --color-text-placeholder: #52525b; /* Zinc-600 */
         
-        /* Borders */
-        --color-border-color: #d4d4d8; /* zinc-300 */
-
-        /* Icons */
-        --color-icon-primary: #52525b; /* zinc-600 */
+        --color-border-color: #d4d4d8;
+        --color-icon-primary: #18181b; /* Zinc-900 */
         
-        /* Notices */
-        --color-notice-background: #fef3c7; /* yellow-100 */
-        --color-notice-text: #92400e; /* yellow-800 */
+        --color-notice-background: #fef3c7;
+        --color-notice-text: #92400e;
       }
 
       html.dark {
-        /* Backgrounds */
         --color-primary-background: #0a0a0a;
         --color-panel-background: #171717;
         --color-interactive-background-hover: #262626;
@@ -75,34 +51,19 @@
         --color-accent-background-hover: #3367D6;
         --color-subtle-background: #1c1c1c;
 
-        /* Text */
         --color-text-primary: #fafafa;
-        --color-text-secondary: #a1a1aa; /* zinc-400 */
+        --color-text-secondary: #a1a1aa;
         --color-text-accent: #4285F4;
         --color-text-inverted: #0a0a0a;
-        --color-text-placeholder: #71717a; /* zinc-500 */
+        --color-text-placeholder: #71717a;
         
-        /* Borders */
         --color-border-color: #262626;
-
-        /* Icons */
-        --color-icon-primary: #a1a1aa; /* zinc-400 */
+        --color-icon-primary: #a1a1aa;
         
-        /* Notices */
-        --color-notice-background: rgba(234, 179, 8, 0.2); /* yellow-500/20 */
-        --color-notice-text: #fde047; /* yellow-300 */
+        --color-notice-background: rgba(234, 179, 8, 0.2);
+        --color-notice-text: #fde047;
       }
       
-      /* Browser Autofill Styles */
-      input:-webkit-autofill,
-      input:-webkit-autofill:hover, 
-      input:-webkit-autofill:focus, 
-      input:-webkit-autofill:active {
-          -webkit-box-shadow: 0 0 0 30px var(--color-input-background) inset !important;
-          -webkit-text-fill-color: var(--color-text-primary) !important;
-          caret-color: var(--color-text-primary);
-      }
-
       body {
         background-color: var(--color-primary-background);
         color: var(--color-text-primary);
@@ -117,94 +78,34 @@
         background-image: radial-gradient(#262626 1px, transparent 0);
       }
 
-      @keyframes glow {
-        0% { box-shadow: 0 0 5px rgba(66, 133, 244, 0); }
-        50% { box-shadow: 0 0 20px 5px rgba(66, 133, 244, 0.4); }
-        100% { box-shadow: 0 0 5px rgba(66, 133, 244, 0); }
-      }
-      .card-glow:hover {
-        animation: glow 2s infinite ease-in-out;
-      }
-      @keyframes bounce {
-        0%, 20%, 50%, 80%, 100% {
-          transform: translateY(0);
-        }
-        40% {
-          transform: translateY(-10px);
-        }
-        60% {
-          transform: translateY(-5px);
-        }
-      }
-      .animate-bounce-slow {
-        animation: bounce 2s infinite;
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      .animate-fade-in {
-        animation: fadeIn 0.5s ease-in-out;
-      }
-      @keyframes slideInUp {
-        from { transform: translateY(2rem); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-      }
-      .animate-slide-in-up {
-        animation: slideInUp 0.5s ease-out;
-      }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      .animate-fade-in { animation: fadeIn 0.3s ease-out; }
 
-      /* Custom Thin Scrollbar */
-      .thin-scrollbar::-webkit-scrollbar {
-        width: 8px;
-      }
-      .thin-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-      }
+      .thin-scrollbar::-webkit-scrollbar { width: 6px; }
+      .thin-scrollbar::-webkit-scrollbar-track { background: transparent; }
       .thin-scrollbar::-webkit-scrollbar-thumb {
-        background-color: #52525b; /* zinc-600 */
+        background-color: var(--color-border-color);
         border-radius: 20px;
-        border: 3px solid transparent;
-        background-clip: content-box;
       }
-      html.dark .thin-scrollbar::-webkit-scrollbar-thumb {
-        background-color: #a1a1aa; /* zinc-400 */
-      }
-      
-      /* Resizer Handle Visuals */
-      .resizer-handle:hover {
-        background-color: var(--color-text-accent);
-        opacity: 0.2;
-      }
-
-      .delay-100 { animation-delay: 100ms; }
-      .delay-200 { animation-delay: 200ms; }
-      .delay-300 { animation-delay: 300ms; }
-
     </style>
     <script>
-      // IIFE to set theme and accent color classes on the <html> element before the page loads to prevent FOUC
       (function() {
         try {
-          // Set Theme
           const theme = localStorage.getItem('vericlear-theme');
+          // Force dark by default if no preference is explicitly set
           if (theme === 'dark' || !theme) {
             document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
           }
           
-          // Set Accent Color
           const accentColor = localStorage.getItem('vericlear-accent-color');
-          const accentColorHover = localStorage.getItem('vericlear-accent-color-hover');
-          if (accentColor && accentColorHover) {
-              const style = document.documentElement.style;
-              style.setProperty('--color-accent-background', accentColor);
-              style.setProperty('--color-accent-background-hover', accentColorHover);
-              style.setProperty('--color-text-accent', accentColor);
+          if (accentColor) {
+              document.documentElement.style.setProperty('--color-accent-background', accentColor);
+              document.documentElement.style.setProperty('--color-text-accent', accentColor);
           }
-
         } catch (e) {
-          console.warn('Could not set initial theme from localStorage', e);
-          document.documentElement.classList.add('dark'); // Fallback to dark
+          document.documentElement.classList.add('dark');
         }
       })();
 
@@ -212,28 +113,22 @@
         darkMode: 'class',
         theme: {
           extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-            },
+            fontFamily: { sans: ['Inter', 'sans-serif'] },
             colors: {
               'primary-background': 'var(--color-primary-background)',
               'panel-background': 'var(--color-panel-background)',
               'interactive-background-hover': 'var(--color-interactive-background-hover)',
               'input-background': 'var(--color-input-background)',
               'subtle-background': 'var(--color-subtle-background)',
-
               'accent-primary': 'var(--color-accent-background)',
               'accent-primary-hover': 'var(--color-accent-background-hover)',
-              
               'text-primary': 'var(--color-text-primary)',
               'text-secondary': 'var(--color-text-secondary)',
               'text-accent': 'var(--color-text-accent)',
               'text-inverted': 'var(--color-text-inverted)',
               'text-placeholder': 'var(--color-text-placeholder)',
-              
               'border-color': 'var(--color-border-color)',
               'icon-primary': 'var(--color-icon-primary)',
-
               'notice-background': 'var(--color-notice-background)',
               'notice-text': 'var(--color-notice-text)',
             }
@@ -250,29 +145,14 @@
     "react-router-dom": "https://aistudiocdn.com/react-router-dom@^6.24.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "zustand": "https://aistudiocdn.com/zustand@^5.0.8",
-    "zod": "https://aistudiocdn.com/zod@^3.23.8",
-    "date-fns": "https://aistudiocdn.com/date-fns@^3.6.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.26.0"
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.26.0",
+    "date-fns": "https://esm.sh/date-fns@^4.1.0",
+    "zod": "https://esm.sh/zod@^4.2.1"
   }
 }
 </script>
 </head>
   <body class="bg-primary-background text-text-primary">
-    <!-- Netlify Form Detection: This is a hidden form that Netlify's bots will detect at build time. -->
-    <form name="lead-capture" data-netlify="true" netlify-honeypot="bot-field" hidden>
-      <input type="hidden" name="form-name" value="lead-capture" />
-      <input type="email" name="email" />
-    </form>
-    
-    <!-- Hidden form for the Feedback feature -->
-    <form name="feedback-form" data-netlify="true" netlify-honeypot="bot-field" hidden>
-      <input type="hidden" name="form-name" value="feedback-form" />
-      <input type="number" name="rating" />
-      <input type="text" name="feedback-type" />
-      <textarea name="comments"></textarea>
-      <input type="email" name="email" />
-    </form>
-    
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
